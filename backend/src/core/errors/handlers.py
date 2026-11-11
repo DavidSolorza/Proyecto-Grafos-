@@ -21,6 +21,11 @@ def register_error_handlers(app: Flask) -> None:
             error.status_code,
         )
 
+    @app.errorhandler(ValueError)
+    @app.errorhandler(TypeError)
+    def handle_bad_input(error):
+        return jsonify({"success": False, "error": f"Datos inválidos: {error}"}), 400
+
     @app.errorhandler(404)
     def handle_not_found(_error):
         return (

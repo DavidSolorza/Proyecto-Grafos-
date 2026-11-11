@@ -4,6 +4,8 @@ from flask_cors import CORS
 from src.core.config.settings import settings
 from src.core.errors.handlers import register_error_handlers
 from src.features.scenario.infrastructure.routes import scenario_bp
+from src.features.elevated_graph.infrastructure.routes import defense_bp
+from src.features.simulation.infrastructure.routes import sim_bp
 
 
 def create_app() -> Flask:
@@ -27,6 +29,8 @@ def create_app() -> Flask:
 
     # Register feature blueprints
     app.register_blueprint(scenario_bp)
+    app.register_blueprint(defense_bp)
+    app.register_blueprint(sim_bp)
 
     return app
 

@@ -7,6 +7,15 @@ from src.features.labyrinth.domain.entities import VertexM, CorridorM
 from src.features.labyrinth.domain.graph_m import GraphM
 
 
+def _opt_float(x):
+    """JSON null (or a missing key) means 'not allowed'."""
+    return None if x is None else float(x)
+
+
+def _opt_int(x):
+    return None if x is None else int(x)
+
+
 class ScenarioManager:
     """Central domain manager coordinating GE, GM and scenario configs."""
 
@@ -17,6 +26,8 @@ class ScenarioManager:
         self.candidates_meta: list[dict[str, Any]] = []
         self.convoy_config: dict[str, int] = {}
         self.defenders_config: dict[str, dict[str, Any]] = {}
+        self.helicopter_config: dict[str, float] = {}
+        self.raw: dict[str, Any] = {}
 
     def populate_graph_e(self, raw_vertices: list[dict], raw_edges: list[dict]) -> None:
         """Instantiate and populate GraphE domain objects."""
@@ -32,10 +43,10 @@ class ScenarioManager:
                 id=e["id"],
                 u=e["u"],
                 v=e["v"],
-                time_walk=float(e["time_walk"]),
-                time_moto=float(e["time_moto"]),
-                bridge_max_hp=int(e.get("bridge_max_hp", 10)),
-                bridge_current_hp=int(e.get("bridge_current_hp", 10)),
+                time_walk=_opt_float(e.get("time_walk")),
+                time_moto=_opt_float(e.get("time_moto")),
+                bridge_max_hp=_opt_int(e.get("bridge_max_hp")),
+                bridge_current_hp=_opt_int(e.get("bridge_current_hp", e.get("bridge_max_hp"))),
             ))
 
     def populate_graph_m(self, raw_vertices: list[dict], raw_edges: list[dict]) -> None:

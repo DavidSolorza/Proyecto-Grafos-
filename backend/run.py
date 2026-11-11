@@ -5,7 +5,7 @@ from src.core.config.settings import settings
 app = create_app()
 
 if __name__ == "__main__":
-    print(f"🚀 Starting Flask API on http://{settings.HOST}:{settings.PORT}")
+    print(f"Starting Flask API on http://{settings.HOST}:{settings.PORT}")
     app.run(
         host=settings.HOST,
         port=settings.PORT,

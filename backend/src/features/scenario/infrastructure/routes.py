@@ -1,32 +1,24 @@
 """Scenario REST API endpoints including upload and graph details."""
+import json
 from flask import Blueprint, jsonify, request
-from src.core.config.settings import settings
+from src.core.errors.handlers import AppError
 from src.features.scenario.application.loader import ScenarioLoader
+from src.features.scenario.application.session import session
 
 scenario_bp = Blueprint("scenario", __name__, url_prefix="/api/scenario")
-_active_manager = None
-
-
-def get_current_manager():
-    """Retrieve or initialize the active ScenarioManager singleton."""
-    global _active_manager
-    if _active_manager is None:
-        _active_manager = ScenarioLoader.load_from_file(
-            settings.DEFAULT_SCENARIO_PATH
-        )
-    return _active_manager
 
 
 @scenario_bp.route("/current", methods=["GET"])
 def get_current_scenario():
-    """Retrieve full active scenario data and initial state validation."""
-    mgr = get_current_manager()
-    validation = mgr.validate_initial_state()
+    """Retrieve full active scenario data and initial state validation (null while none is loaded)."""
+    if not session.has_scenario:
+        return jsonify({"success": True, "loaded": False, "data": None, "validation": None})
+    mgr = session.manager
     base = mgr.graph_e.get_base_vertex()
-
     return jsonify({
         "success": True,
-        "validation": validation,
+        "loaded": True,
+        "validation": mgr.validate_initial_state(),
         "data": {
             "metadata": mgr.metadata.__dict__,
             "graph_e": {
@@ -43,33 +35,36 @@ def get_current_scenario():
             "candidates_meta": mgr.candidates_meta,
             "convoy": mgr.convoy_config,
             "defenders_config": mgr.defenders_config,
+            "helicopter": mgr.helicopter_config,
         },
     })
 
 
 @scenario_bp.route("/upload", methods=["POST"])
 def upload_scenario():
-    """Load and activate a new scenario from JSON payload or file."""
-    global _active_manager
-    if request.is_json:
-        data = request.get_json()
-    elif "file" in request.files:
-        import json
-        file = request.files["file"]
-        data = json.load(file.stream)
-    else:
-        return jsonify({"success": False, "error": "No JSON provided"}), 400
+    """Load and activate a new scenario from a JSON payload or an uploaded file."""
+    try:
+        if request.is_json:
+            data = request.get_json()
+        elif "file" in request.files:
+            data = json.load(request.files["file"].stream)
+        else:
+            raise AppError("No se recibió ningún JSON")
+        new_mgr = ScenarioLoader.load_from_dict(data)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise AppError("El archivo no es un JSON válido")
+    except (KeyError, ValueError, TypeError) as exc:
+        raise AppError(f"Escenario con formato incorrecto: {exc!r}")
 
-    new_mgr = ScenarioLoader.load_from_dict(data)
     validation = new_mgr.validate_initial_state()
     if not validation["has_base"]:
-        return jsonify({"success": False, "error": "Scenario must have a BASE node"}), 400
+        raise AppError("El escenario debe tener exactamente una BASE")
     if not validation["labyrinth_path_exists"]:
-        return jsonify({"success": False, "error": "No reachable path between ENTRY and EXIT"}), 400
+        raise AppError("No hay camino entre la ENTRADA y la SALIDA del laberinto")
 
-    _active_manager = new_mgr
+    session.load(new_mgr)
     return jsonify({
         "success": True,
-        "message": f"Scenario '{new_mgr.metadata.title}' loaded successfully.",
+        "message": f"Escenario '{new_mgr.metadata.title}' cargado correctamente.",
         "validation": validation,
     })

@@ -13,6 +13,8 @@ class ScenarioMetadata:
     max_towers_k: int
     initial_budget: int
     bridge_repair_time: float
+    time_limit: float = 300.0
+    bridge_repair_crew: int = 0      # people a repair keeps busy (0 = nobody needed)
 
 
 @dataclass

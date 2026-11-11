@@ -25,3 +25,6 @@ yarn-error.log*
 *.swo
 .DS_Store
 Thumbs.db
+
+# Tests
+.pytest_cache/

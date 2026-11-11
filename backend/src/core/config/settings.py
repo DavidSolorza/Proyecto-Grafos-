@@ -8,11 +8,7 @@ class Settings:
 
     ROOT_PROJECT_DIR: Path = Path(__file__).resolve().parents[4]
 
-    # Resolve scenario location (either in docs/ or root)
-    _doc_path = ROOT_PROJECT_DIR / "docs" / "escenario_general_p_tardo.json"
-    _root_path = ROOT_PROJECT_DIR / "escenario_general_p_tardo.json"
-    DEFAULT_SCENARIO_PATH: Path = _doc_path if _doc_path.exists() else _root_path
-
+    # No fixed scenario path: the user always picks the JSON from the UI (requirement §12)
     PORT: int = int(os.environ.get("PORT", 5000))
     DEBUG: bool = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
     HOST: str = os.environ.get("HOST", "0.0.0.0")

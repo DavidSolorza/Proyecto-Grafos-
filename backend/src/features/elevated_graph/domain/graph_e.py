@@ -26,8 +26,11 @@ class GraphE:
         self.adj[edge.u].append(edge)
         self.adj[edge.v].append(edge)
 
-    def get_connected_component(self, start_id: str) -> set[str]:
-        """Custom BFS to find all accessible vertices from start_id."""
+    def get_connected_component(self, start_id: str, walkable_only: bool = False) -> set[str]:
+        """Custom BFS to find all accessible vertices from start_id.
+
+        With `walkable_only`, edges where walking is not allowed are ignored.
+        """
         if start_id not in self.vertices:
             return set()
 
@@ -37,7 +40,7 @@ class GraphE:
         while queue:
             curr = queue.popleft()
             for edge in self.adj.get(curr, []):
-                if edge.is_destroyed:
+                if edge.is_destroyed or (walkable_only and edge.time_walk is None):
                     continue
                 neighbor = edge.v if edge.u == curr else edge.u
                 if neighbor not in visited:
