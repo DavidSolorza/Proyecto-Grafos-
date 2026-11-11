@@ -1,0 +1,64 @@
+/* Design tokens: beige paper + black ink, with three muted accents */
+:root {
+  --paper: #f0e7d6;
+  --paper-deep: #e6d9c0;
+  --card: #faf6ec;
+  --ink: #14110e;
+  --ink-2: #221d18;
+  --ink-soft: #6a5f52;
+  --line: rgba(20, 17, 14, 0.14);
+  --sand: #d8c8a6;
+  --ochre: #b8893b;     /* candidates, highlights */
+  --terracotta: #b4472b; /* enemy, danger */
+  --sage: #5f7a4f;       /* defenders, ok */
+  --radius: 14px;
+  --shadow: 0 1px 2px rgba(20, 17, 14, 0.06), 0 8px 24px rgba(20, 17, 14, 0.06);
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-title: 'Fraunces', Georgia, serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { font-family: var(--font-title); font-weight: 700; line-height: 1.15; }
+h2 { font-size: 1.5rem; }
+h3 { font-size: 1.05rem; }
+p { color: var(--ink-soft); }
+code, .mono { font-family: var(--font-mono); font-size: 0.85em; }
+button { font-family: inherit; cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: 0.45; }
+
+:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+
+/* Page layout */
+.app { min-height: 100vh; display: flex; flex-direction: column; }
+.page { width: 100%; max-width: 1240px; margin: 0 auto; padding: 24px 20px 64px; }
+.page-head { margin-bottom: 20px; }
+.page-head p { max-width: 62ch; margin-top: 6px; }
+
+.grid-2 { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spread { justify-content: space-between; }
+
+@media (max-width: 960px) {
+  .grid-2 { grid-template-columns: minmax(0, 1fr); }
+  h2 { font-size: 1.3rem; }
+}
+@media (max-width: 520px) {
+  .page { padding: 16px 14px 56px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

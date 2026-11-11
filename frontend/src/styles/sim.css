@@ -1,0 +1,24 @@
+.bar { height: 6px; border-radius: 99px; background: var(--paper-deep); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--ink); border-radius: 99px; transition: width 0.25s linear; }
+.bar.red i { background: var(--terracotta); }
+
+.recruit { display: grid; gap: 8px; }
+.recruit-btn { display: grid; text-align: left; border-radius: 12px; padding: 10px 14px; gap: 2px; }
+.recruit-btn span { font-size: 0.74rem; color: var(--ink-soft); font-family: var(--font-mono); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 0.76rem; cursor: pointer;
+  background: var(--paper); user-select: none; }
+.chip.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+
+.enemy.dead { opacity: 0.4; text-decoration: line-through; }
+.enemy { font-size: 0.82rem; display: grid; gap: 4px; }
+
+.log { list-style: none; max-height: 260px; overflow-y: auto; display: grid; gap: 6px; font-size: 0.8rem; padding-right: 4px; }
+.log li { display: grid; grid-template-columns: 52px 16px 1fr; gap: 6px; color: var(--sand); }
+.log .mono { color: rgba(216, 200, 166, 0.6); }
+.log-combat { color: #f0b8a4 !important; }
+.log-bridge { color: #e8c37a !important; }
+.log-end { color: var(--paper) !important; font-weight: 600; }
+.log-system { opacity: 0.75; }
