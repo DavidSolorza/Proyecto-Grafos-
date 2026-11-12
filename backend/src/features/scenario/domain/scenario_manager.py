@@ -28,6 +28,7 @@ class ScenarioManager:
         self.defenders_config: dict[str, dict[str, Any]] = {}
         self.helicopter_config: dict[str, float] = {}
         self.raw: dict[str, Any] = {}
+        self.initial_route: dict | None = None   # cheapest entry -> exit route before any danger (section 3)
 
     def populate_graph_e(self, raw_vertices: list[dict], raw_edges: list[dict]) -> None:
         """Instantiate and populate GraphE domain objects."""

@@ -3,11 +3,13 @@
 Runs the automated tests grouped by statement section and a few static rules
 (no graph libraries, no heapq, files under 150 lines, valid example scenarios).
 """
+import os
 import re
 import subprocess
 import sys
 from pathlib import Path
 
+os.environ.setdefault("PYGAME_HIDE_SUPPORT_PROMPT", "1")     # keep the output clean
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
@@ -22,27 +24,44 @@ SECTIONS = [
     ("§7/§8", "Traslado terrestre, puentes y cuadrilla de reconstrucción", ["test_s7_ground.py", "test_repair_crew.py"]),
     ("§9/§10", "Helicóptero, excedentes y presupuesto", ["test_s9_air_budget.py"]),
     ("§11", "Reloj lógico y condiciones de fin", ["test_s11_end.py"]),
-    ("§12", "Arranque vacío y carga de JSON desde la interfaz", ["test_s12_api.py"]),
+    ("§12", "Arranque vacío y carga de JSON desde la interfaz", ["test_s12_api.py", "test_s12_empty_start.py"]),
 ]
+DESKTOP = ROOT.parent / "desktop"
+DESKTOP_TEXT = "Interfaz Pygame: mapa, plan, compra, transporte, rutas, puentes y resultado"
 
 
-def run_tests(files: list[str]) -> tuple[bool, str]:
+def run_tests(files: list[str], cwd: Path = ROOT) -> tuple[bool, str]:
     cmd = [sys.executable, "-m", "pytest", "-q", "--no-header", "-p", "no:cacheprovider"]
-    out = subprocess.run(cmd + [f"tests/{f}" for f in files], cwd=ROOT, capture_output=True, text=True)
+    targets = [f"tests/{f}" for f in files] or ["tests"]
+    out = subprocess.run(cmd + targets, cwd=cwd, capture_output=True, text=True)
     last = out.stdout.strip().splitlines()[-1] if out.stdout.strip() else "sin salida"
     return out.returncode == 0, last
+
+
+def run_audit() -> tuple[bool, str]:
+    """The point-by-point audit of the statement against a real server (auditar_enunciado.py)."""
+    out = subprocess.run([sys.executable, "auditar_enunciado.py"], cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
+    return out.returncode == 0, (out.stdout.strip().splitlines() or ["sin salida"])[-1]
+
+
+def pygame_installed() -> bool:
+    try:
+        import pygame  # noqa: F401
+        return True
+    except ImportError:
+        return False
 
 
 def source_files() -> list[Path]:
     exts = {".py", ".js", ".jsx", ".css"}
     skip = {"node_modules", "dist", "__pycache__"}
-    dirs = [ROOT / "src", ROOT / "tests", ROOT.parent / "frontend" / "src"]
+    dirs = [ROOT / "src", ROOT / "tests", ROOT / "audit", DESKTOP, ROOT.parent / "frontend" / "src"]
     return [p for d in dirs for p in d.rglob("*") if p.suffix in exts and not skip & set(p.parts)]
 
 
 def static_checks() -> list[tuple[bool, str]]:
     files = source_files()
-    backend = [p for p in files if p.suffix == ".py" and "src" in p.parts]
+    backend = [p for p in files if p.suffix == ".py" and ("src" in p.parts or "tardo_ui" in p.parts)]
     banned = re.compile(r"^\s*(import|from)\s+(networkx|igraph|graph_tool|scipy\.sparse\.csgraph|heapq)\b", re.M)
     users = [p.name for p in backend if banned.search(p.read_text(encoding="utf-8"))]
     long_files = [f"{p.name} ({len(p.read_text(encoding='utf-8').splitlines())})" for p in files
@@ -58,7 +77,12 @@ def static_checks() -> list[tuple[bool, str]]:
         if not ok:
             bad.append(scenario.name)
     n_scenarios = len(list((ROOT.parent / "docs").glob("escenario_*.json")))
+    from audit.static_checks import fluid_css_report, spanish_comments
+    spanish = spanish_comments()
+    clamps, fixed = fluid_css_report()
     return [
+        (clamps >= 25 and not fixed, f"Web fluida: {clamps} usos de clamp() y ningún tamaño de letra fijo" + (f" (fijos: {fixed[:3]})" if fixed else "")),
+        (not spanish, "Comentarios y docstrings en inglés" + (f" (en español: {spanish[:3]})" if spanish else "")),
         (not users, "Sin librerías de grafos ni heapq" + (f" (usan: {users})" if users else "")),
         (not long_files, "Todos los archivos tienen menos de 150 líneas" + (f" (largos: {long_files})" if long_files else "")),
         (not bad and n_scenarios >= 2, f"{n_scenarios} escenarios de ejemplo válidos" + (f" (fallan: {bad})" if bad else "")),
@@ -77,9 +101,25 @@ def main() -> int:
         failures += not ok
         print(f"{'✔' if ok else '✘'} {text}")
     total_ok, total = run_tests([])
-    print("-" * 60 + f"\nSuite completa: {total}")
-    print("RESULTADO: TODO CORRECTO" if not failures and total_ok else f"RESULTADO: {failures} problema(s)")
-    return 0 if not failures and total_ok else 1
+    failures += not total_ok
+    print("-" * 60)
+    print(f"Suite del backend: {total}")
+    a_ok, a_total = run_audit()
+    failures += not a_ok
+    print(f"{'✔' if a_ok else '✘'} {'AUDIT':7} Auditoría punto a punto del enunciado contra un servidor real (python auditar_enunciado.py)")
+    print(f"          {a_total}")
+    if pygame_installed():
+        d_ok, d_total = run_tests([], DESKTOP)
+        failures += not d_ok
+        print(f"{'✔' if d_ok else '✘'} {'§13':7} {DESKTOP_TEXT}")
+        print(f"          {d_total}")
+    else:
+        failures += 1
+        print(f"✘ {'§13':7} {DESKTOP_TEXT}")
+        print("          Falta pygame: python -m pip install -r requirements-dev.txt")
+    print("-" * 60)
+    print("RESULTADO: TODO CORRECTO" if not failures else f"RESULTADO: {failures} problema(s)")
+    return 0 if not failures else 1
 
 
 if __name__ == "__main__":

@@ -51,6 +51,7 @@ class World:
     status: SimState = SimState.IDLE
     end_reason: str = ""
     version: int = 0                                  # bumps when bridges collapse / return
+    event_seq: int = 0                                # total events ever logged (clients detect changes)
     soldiers: dict[str, Soldier] = field(default_factory=dict)
     enemies: list[Enemy] = field(default_factory=list)
     reserved: dict[str, int] = field(default_factory=dict)
@@ -58,6 +59,7 @@ class World:
 
     def log(self, kind: str, text: str) -> None:
         """Record what happened (the UI shows it, so the user knows why)."""
+        self.event_seq += 1
         self.events.append({"t": round(self.clock, 2), "kind": kind, "text": text})
         del self.events[:-150]
 

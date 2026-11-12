@@ -44,6 +44,8 @@ INVALID = {
     "soldado con costo 0": (lambda r: r["defenders_config"]["infantry"].update(cost=0), "cost"),
     "helicóptero sin velocidad": (lambda r: r.update(helicopter={"speed": 0}), "helicopter"),
     "falta graph_m": (lambda r: r.pop("graph_m"), "graph_m"),
+    "candidata sin radio de vigilancia": (lambda r: r["candidates_meta"].pop(0), "falta el radio rv"),
+    "candidata con radio repetido": (lambda r: r["candidates_meta"].append(dict(r["candidates_meta"][0])), "repetida"),
 }
 
 

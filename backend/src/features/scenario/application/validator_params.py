@@ -22,6 +22,12 @@ def check_parameters(raw: dict, ge_ids: set, errors: list) -> None:
         errors.append("metadata.max_towers_K debe ser un entero positivo")
 
     types = {v.get("id"): v.get("type") for v in raw["graph_e"].get("vertices", []) if isinstance(v, dict)}
+    listed = [m.get("vertex_id") for m in raw.get("candidates_meta", []) if isinstance(m, dict)]
+    for vid in sorted({v for v in listed if listed.count(v) > 1}):
+        errors.append(f"candidates_meta: la candidata '{vid}' está repetida")
+    for vid, kind in sorted(types.items(), key=lambda kv: str(kv[0])):
+        if kind == "CANDIDATE" and vid not in listed:
+            errors.append(f"candidates_meta: falta el radio rv de la candidata '{vid}'")
     for m in raw.get("candidates_meta", []):
         vid = m.get("vertex_id") if isinstance(m, dict) else None
         if types.get(vid) != "CANDIDATE":

@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 from typing import Any
 from src.core.errors.handlers import AppError
+from src.features.labyrinth.application.route_finder import minimum_route
 from src.features.scenario.domain.scenario import ScenarioMetadata
 from src.features.scenario.domain.scenario_manager import ScenarioManager
 from src.features.scenario.application.validator import validate_scenario
@@ -58,6 +59,8 @@ class ScenarioLoader:
             gm_data.get("vertices", []), gm_data.get("edges", [])
         )
 
+        entry, exit_v = manager.graph_m.get_entry(), manager.graph_m.get_exit()
+        manager.initial_route = minimum_route(manager.graph_m, entry.id, exit_v.id)   # section 3: the cheapest route must be calculated
         manager.candidates_meta = raw.get("candidates_meta", [])
         manager.convoy_config = raw.get("convoy", {})
         manager.defenders_config = raw.get("defenders_config", {})

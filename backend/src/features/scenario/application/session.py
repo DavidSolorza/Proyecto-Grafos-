@@ -14,6 +14,7 @@ class Session:
         self._manager: Optional[ScenarioManager] = None
         self.plan: Optional[dict] = None
         self.simulation: Optional[Simulation] = None
+        self.revision = {"scenario": 0, "plan": 0, "match": 0}  # bumped on every replacement
 
     @property
     def has_scenario(self) -> bool:
@@ -29,6 +30,7 @@ class Session:
     def load(self, manager: ScenarioManager) -> None:
         """A new scenario replaces everything that depended on the old one."""
         self._manager, self.plan, self.simulation = manager, None, None
+        self.revision["scenario"] += 1
 
     def calculate_plan(self) -> dict:
         """Towers cannot change after the fight starts, so planning is blocked then."""
@@ -37,6 +39,7 @@ class Session:
             raise AppError("El enfrentamiento ya inició: las torres no se pueden reubicar", 409)
         self.plan = plan_defense(self.manager)
         self.simulation = None  # a new plan needs a new match
+        self.revision["plan"] += 1
         return self.plan
 
     def new_simulation(self) -> Simulation:
@@ -45,6 +48,7 @@ class Session:
             raise AppError("Primero calcula el plan de defensa", 409)
         self.manager_reset()
         self.simulation = Simulation(self.manager, self.plan)
+        self.revision["match"] += 1
         return self.simulation
 
     def manager_reset(self) -> None:

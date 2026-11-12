@@ -36,7 +36,24 @@ def get_current_scenario():
             "convoy": mgr.convoy_config,
             "defenders_config": mgr.defenders_config,
             "helicopter": mgr.helicopter_config,
+            "initial_route": mgr.initial_route,
         },
+    })
+
+
+@scenario_bp.route("/status", methods=["GET"])
+def get_status():
+    """Cheap fingerprint of the shared session so every client (Pygame, React) can tell when to refresh."""
+    sim = session.simulation
+    w = sim.world if sim else None
+    return jsonify({
+        "success": True,
+        "loaded": session.has_scenario,
+        "has_plan": session.plan is not None,
+        "revision": dict(session.revision),
+        "match": None if w is None else {
+            "clock": round(w.clock, 2), "status": w.status.value, "events": w.event_seq,
+            "soldiers": len(w.soldiers), "available": w.budget.available, "reserved": w.budget.reserved},
     })
 
 
