@@ -7,8 +7,8 @@ export default function PlanSteps({ steps }) {
     <div className="stack">
       {steps.map((step) => (
         <div key={step.iteration}>
-          <h3 style={{ marginBottom: 6 }}>
-            Iteración {step.iteration} → <span style={{ color: 'var(--ochre)' }}>{step.chosen}</span>
+          <h3 className="mb-s">
+            Iteración {step.iteration} → <span className="accent">{step.chosen}</span>
           </h3>
           <div className="table-wrap">
             <table>
@@ -27,7 +27,7 @@ export default function PlanSteps({ steps }) {
               </tbody>
             </table>
           </div>
-          <p style={{ fontSize: '0.8rem', marginTop: 4 }}>
+          <p className="fine mt-s">
             Corredores que pasan a estar vigilados: {step.new_corridors.join(', ') || 'ninguno'}.
           </p>
         </div>

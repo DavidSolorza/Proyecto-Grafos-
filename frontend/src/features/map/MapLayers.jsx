@@ -2,7 +2,7 @@ import React from 'react';
 import { byId, heatColor, midpoint } from './mapGeometry';
 
 /** Corridors of the labyrinth GM. In simulation they are coloured by danger. */
-export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCoverage }) {
+export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCoverage, routeIds = [] }) {
   const verts = byId(graphM.vertices);
   const live = byId(simCorridors);
   const maxDanger = Math.max(1, ...(simCorridors ?? []).map((c) => c.danger));
@@ -16,6 +16,10 @@ export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCo
         const m = midpoint(a, b);
         return (
           <g key={c.id}>
+            {routeIds.includes(c.id) && (
+              <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b8893b" strokeWidth={view.u * 2.4}
+                strokeLinecap="round" opacity="0.55" />
+            )}
             <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
               stroke={simCorridors ? heatColor(danger / maxDanger) : '#c7704f'}
               strokeWidth={view.u * (isCovered ? 1.3 : 0.8)} strokeDasharray={`${view.u * 2} ${view.u * 1.4}`}

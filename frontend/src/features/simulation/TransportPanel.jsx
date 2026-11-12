@@ -59,9 +59,9 @@ export default function TransportPanel({ sim, baseId, ctrl }) {
         <button className="btn small" onClick={send} disabled={!picked.length || !dest}>Enviar</button>
         <button className="btn ghost small" onClick={showRoute} disabled={!picked.length || !dest || mode === 'air'}>Ver ruta</button>
       </div>
-      {route && <p className="mono">{route}</p>}
+      {route && <p className="mono route-line">{route}</p>}
       {sim.transfers.map((t) => (
-        <p key={t.id} className="mono" style={{ fontSize: '0.78rem' }}>
+        <p key={t.id} className="mono fine">
           {t.id}: {t.soldiers.join(', ')} → {t.dest} ({t.status === 'WAITING' ? 'detenido, esperando ruta' : t.mode})
         </p>
       ))}

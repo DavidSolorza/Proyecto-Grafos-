@@ -13,13 +13,16 @@ export default function Header({ active, onChange, isConnected }) {
     <header className="topbar">
       <div className="topbar-inner">
         <div className="brand">
-          <h1>
-            General P. Tardo
-            <small>Simulador de grafos · Estructuras de Datos</small>
-          </h1>
+          <div className="brand-title">
+            <span className="brand-mark" aria-hidden="true" />
+            <h1>
+              General P. Tardo
+              <small>Simulador de grafos · Estructuras de Datos</small>
+            </h1>
+          </div>
           <div className="status-pill" title="Estado de la conexión con Flask">
             <span className={`dot ${isConnected ? 'on' : ''}`} />
-            {isConnected ? 'Backend conectado' : 'Backend sin conexión'}
+            <span className="pill-text">{isConnected ? 'Backend conectado' : 'Backend sin conexión'}</span>
           </div>
         </div>
         <nav className="tabs" aria-label="Secciones">

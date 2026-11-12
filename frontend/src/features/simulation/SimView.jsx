@@ -27,7 +27,7 @@ export default function SimView({ scenario, plan, ctrl, onNavigate }) {
       <div className="page"><div className="card stack">
         <h2>Primero el plan</h2>
         <p>La simulación necesita las torres elegidas por el árbol mínimo y el algoritmo voraz.</p>
-        <button className="btn" style={{ justifySelf: 'start' }} onClick={() => onNavigate('plan')}>Calcular plan →</button>
+        <button className="btn start" onClick={() => onNavigate('plan')}>Calcular plan →</button>
       </div></div>
     );
   }
@@ -37,7 +37,7 @@ export default function SimView({ scenario, plan, ctrl, onNavigate }) {
         <h2>Todo listo para el combate</h2>
         <p>Se crea una partida nueva con las {plan.towers.length} torres del plan. Después no se pueden mover.</p>
         {ctrl.error && <div className="alert error">{ctrl.error}</div>}
-        <button className="btn" style={{ justifySelf: 'start' }} onClick={ctrl.reset}>Crear simulación</button>
+        <button className="btn start" onClick={ctrl.reset}>Crear simulación</button>
       </div></div>
     );
   }
@@ -51,21 +51,20 @@ export default function SimView({ scenario, plan, ctrl, onNavigate }) {
         <h2>Simulación</h2>
       </header>
       {ctrl.error && (
-        <div className="alert error" role="alert" style={{ marginBottom: 14 }}>
+        <div className="alert error mb-m" role="alert">
           {ctrl.error} <button className="btn ghost small" onClick={ctrl.clearError}>Cerrar</button>
         </div>
       )}
       <div className="grid-2">
-        <div className="stack">
+        <div className="stack sticky-col">
           <GraphMap graphE={scenario.graph_e} graphM={scenario.graph_m} plan={plan} sim={sim}
             layers={{ ge: true, gm: true, tree: false, radii: false }} selected={selected} onSelect={setSelected}>
             {end && !hideEnd && (
               <div className={`end-banner ${end[0]}`} role="status">
                 <h2>{end[1]}</h2><p>{sim.end_reason}</p>
-                <div className="row" style={{ justifyContent: 'center' }}>
+                <div className="row center">
                   <button className="btn on" onClick={() => { setHideEnd(false); ctrl.reset(); }}>Jugar de nuevo</button>
-                  <button className="btn ghost small" style={{ color: 'var(--paper)', borderColor: 'var(--sand)' }}
-                    onClick={() => setHideEnd(true)}>Ver mapa</button>
+                  <button className="btn ghost small light" onClick={() => setHideEnd(true)}>Ver mapa</button>
                 </div>
               </div>
             )}

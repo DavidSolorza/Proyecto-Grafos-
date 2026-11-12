@@ -7,11 +7,13 @@ import PlanView from './features/plan/PlanView';
 import SimView from './features/simulation/SimView';
 import useScenario from './hooks/useScenario';
 import useSimulation from './hooks/useSimulation';
+import useSync from './hooks/useSync';
 
 export default function App() {
   const [tab, setTab] = useState('intro');
   const world = useScenario();
   const sim = useSimulation();
+  useSync(world.reload, sim);
 
   // A new scenario or plan invalidates the running match
   const reload = async () => {

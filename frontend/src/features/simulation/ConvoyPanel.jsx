@@ -16,8 +16,8 @@ export default function ConvoyPanel({ sim }) {
       ))}
       {d && (
         <>
-          <h3 style={{ marginTop: 6 }}>¿Por qué ese camino?</h3>
-          <p style={{ fontSize: '0.85rem' }}>En <b>{d.at}</b> (t = {d.time}s): {d.note}.</p>
+          <h3 className="mt-s">¿Por qué ese camino?</h3>
+          <p className="note">En <b>{d.at}</b> (t = {d.time}s): {d.note}.</p>
           <div className="table-wrap">
             <table>
               <thead><tr><th>Corredor</th><th>Hacia</th><th>w + resto</th></tr></thead>
@@ -45,7 +45,7 @@ export default function ConvoyPanel({ sim }) {
           </tbody>
         </table>
       </div>
-      <p style={{ fontSize: '0.78rem' }}>w(e) = t(e) + α · P(e). Se recalcula en cada intersección con las defensas activas.</p>
+      <p className="fine">w(e) = t(e) + α · P(e). Se recalcula en cada intersección con las defensas activas.</p>
     </div>
   );
 }

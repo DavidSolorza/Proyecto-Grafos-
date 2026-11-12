@@ -29,14 +29,14 @@ export default function FileUploader({ onUploaded }) {
         <h3>Cargar escenario</h3>
         <span className="badge">.json</span>
       </div>
-      <p style={{ marginBottom: 12, fontSize: '0.88rem' }}>
+      <p className="note mb-m">
         Elige un archivo con los dos grafos, el convoy y los parámetros. El backend lo valida antes de usarlo.
       </p>
-      <label className="btn ghost small" style={{ display: 'inline-block' }}>
+      <label className="btn ghost small">
         {busy ? 'Validando…' : 'Seleccionar archivo'}
         <input type="file" accept=".json,application/json" onChange={handleFile} disabled={busy} hidden />
       </label>
-      {msg && <div className={`alert ${msg.type}`} style={{ marginTop: 12 }}>{msg.text}</div>}
+      {msg && <div className={`alert ${msg.type} mt-m`}>{msg.text}</div>}
     </div>
   );
 }

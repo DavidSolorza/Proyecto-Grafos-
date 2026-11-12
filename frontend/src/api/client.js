@@ -30,6 +30,8 @@ export const fetchHealth = () =>
   request('/health').catch((e) => ({ status: 'disconnected', error: e.message }));
 
 export const fetchCurrentScenario = () => request('/scenario/current');
+// Cheap fingerprint of the shared session: lets this app follow changes made by the Pygame client
+export const fetchStatus = () => request('/scenario/status');
 
 export const uploadScenarioFile = (file) => {
   const form = new FormData();

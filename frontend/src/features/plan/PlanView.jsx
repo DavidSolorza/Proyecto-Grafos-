@@ -28,7 +28,7 @@ export default function PlanView({ scenario, plan, onCalculate, error, onNavigat
       </header>
 
       <div className="grid-2">
-        <div>
+        <div className="sticky-col">
           <div className="toolbar">
             <button className="btn small" onClick={calculate} disabled={busy}>
               {busy ? 'Calculando…' : plan ? 'Recalcular plan' : 'Calcular plan'}
@@ -36,7 +36,7 @@ export default function PlanView({ scenario, plan, onCalculate, error, onNavigat
             <button className={`btn small ${showTree ? 'on' : 'ghost'}`} onClick={() => setShowTree(!showTree)} disabled={!plan}>Árbol T_E</button>
             <button className={`btn small ${showRadii ? 'on' : 'ghost'}`} onClick={() => setShowRadii(!showRadii)} disabled={!plan}>Radios Rv</button>
           </div>
-          {error && <div className="alert error" style={{ marginBottom: 12 }}>{error}</div>}
+          {error && <div className="alert error mb-m">{error}</div>}
           <GraphMap graphE={scenario.graph_e} graphM={scenario.graph_m} plan={plan} layers={layers} />
           <MapLegend items={['base', 'tower', 'tree', 'corridor']} />
         </div>
@@ -52,6 +52,10 @@ export default function PlanView({ scenario, plan, onCalculate, error, onNavigat
                   <div className="stat"><b>{plan.mst.total_time}s</b><span>Peso del MST</span></div>
                   <div className="stat"><b>{plan.mst.edges.length}</b><span>Aristas T_E</span></div>
                 </div>
+                <p className="note">
+                  Corredores vigilados: <b>{plan.covered_corridors.length} de {scenario.graph_m.corridors.length}</b>{' '}
+                  ({plan.covered_length} de {plan.total_length} u. de longitud): {plan.covered_corridors.join(', ') || 'ninguno'}.
+                </p>
                 <div className="table-wrap">
                   <table>
                     <thead><tr><th>Torre</th><th>Rv</th><th>D_T</th><th>S(p)</th></tr></thead>

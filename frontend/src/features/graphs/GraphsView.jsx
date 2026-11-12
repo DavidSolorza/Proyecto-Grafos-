@@ -28,7 +28,7 @@ export default function GraphsView({ scenario }) {
       </header>
 
       <div className="grid-2">
-        <div>
+        <div className="sticky-col">
           <div className="toolbar">
             {MODES.map(([id, label]) => (
               <button key={id} className={`btn small ${mode === id ? 'on' : 'ghost'}`} onClick={() => setMode(id)}>
@@ -37,12 +37,21 @@ export default function GraphsView({ scenario }) {
             ))}
           </div>
           <GraphMap graphE={scenario.graph_e} graphM={scenario.graph_m} layers={layers}
-            selected={selected} onSelect={setSelected} />
+            routeIds={scenario.initial_route?.corridors} selected={selected} onSelect={setSelected} />
           <MapLegend items={['base', 'candidate', 'heliport', 'edge', 'corridor']} />
         </div>
 
         <div className="stack">
           <NodeInfo node={selected} onClose={() => setSelected(null)} />
+          <div className="card">
+            <h3>Camino inicial de menor costo</h3>
+            <p className="mono">
+              {scenario.initial_route
+                ? `${scenario.initial_route.vertices.join(' → ')} (t = ${Number(scenario.initial_route.cost.toFixed(2))}s)`
+                : 'No hay camino entre la entrada y la salida'}
+            </p>
+            <p>Se calcula al cargar el escenario con Dijkstra y t(e) = longitud / velocidad; en el mapa es la franja ocre.</p>
+          </div>
           <Explainer title="¿Cómo se guarda un grafo aquí?" open>
             <p>
               Cada grafo es una clase con dos diccionarios: <code>vertices</code> (id → vértice) y

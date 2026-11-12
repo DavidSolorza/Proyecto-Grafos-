@@ -10,16 +10,19 @@ export default function useScenario() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // `silent` re-reads the backend without flashing the loading state or clearing the visible error
+  const load = useCallback(async (silent = false) => {
+    if (!silent) {
+      setLoading(true);
+      setError(null);
+    }
     try {
       const [res, planRes] = await Promise.all([fetchCurrentScenario(), fetchPlan()]);
       setScenario(res.data);
       setValidation(res.validation);
       setPlan(planRes.plan);
     } catch (err) {
-      setError(err.message);
+      if (!silent) setError(err.message);
     } finally {
       setLoading(false);
     }

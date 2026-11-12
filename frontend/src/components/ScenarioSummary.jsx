@@ -30,14 +30,19 @@ export default function ScenarioSummary({ scenario, validation }) {
           <div className="stat" key={label}><b>{value}</b><span>{label}</span></div>
         ))}
       </div>
-      <p style={{ fontSize: '0.88rem' }}>
+      <p className="note">
         Convoy enemigo: <b>{c.tanks}</b> tanque(s), <b>{c.trucks}</b> camión(es) y{' '}
         <b>{c.robot_soldiers}</b> soldado(s) robot. Grafo GE: {scenario.graph_e.vertices.length} vértices y{' '}
         {scenario.graph_e.edges.length} aristas. Grafo GM: {scenario.graph_m.vertices.length} vértices y{' '}
         {scenario.graph_m.corridors.length} corredores.
       </p>
+      {scenario.initial_route && (
+        <p className="note">
+          Camino inicial de menor costo: <b>{scenario.initial_route.vertices.join(' → ')}</b> (t = {Number(scenario.initial_route.cost.toFixed(2))}s).
+        </p>
+      )}
       {validation && (
-        <ul className="row" style={{ listStyle: 'none', gap: 8 }}>
+        <ul className="check-list">
           {CHECKS.map(([key, label]) => (
             <li key={key} className={`badge ${validation[key] ? 'ok' : 'bad'}`}>
               {validation[key] ? '✓' : '✗'} {label}

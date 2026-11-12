@@ -11,7 +11,7 @@ import '../../styles/map.css';
  */
 export default function GraphMap({
   graphE, graphM, plan, sim, layers = { ge: true, gm: true, tree: false, radii: false },
-  selected, onSelect = () => {}, children,
+  selected, onSelect = () => {}, children, routeIds = [],
 }) {
   if (!graphE || !graphM) return null;
   const view = computeView(graphE, graphM);
@@ -32,7 +32,7 @@ export default function GraphMap({
         <rect x={view.minX} y={view.minY} width={view.w} height={view.h} fill="url(#grid)" />
         {layers.radii && towerPoints.length > 0 && <RadiusLayer towers={towerPoints} view={view} />}
         {layers.gm && (
-          <CorridorLayer graphM={graphM} view={view} simCorridors={sim?.corridors}
+          <CorridorLayer graphM={graphM} view={view} simCorridors={sim?.corridors} routeIds={routeIds}
             covered={plan?.covered_corridors} showCoverage={layers.tree && !sim} />
         )}
         {layers.ge && (

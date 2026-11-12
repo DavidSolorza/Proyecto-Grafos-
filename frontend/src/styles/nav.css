@@ -1,0 +1,48 @@
+/* Top bar: brand, backend status and navigation (sticky, with a soft glass effect) */
+.topbar {
+  position: sticky; top: 0; z-index: 30; color: var(--paper);
+  background: linear-gradient(180deg, rgba(20, 17, 14, 0.97), rgba(20, 17, 14, 0.92));
+  backdrop-filter: blur(12px) saturate(1.2);
+  border-bottom: 1px solid rgba(216, 200, 166, 0.14);
+  box-shadow: 0 10px 30px -18px rgba(20, 17, 14, 0.7);
+}
+.topbar-inner { width: min(100%, var(--container)); margin-inline: auto; padding: var(--sp-3) var(--pad-x) 0; }
+.brand { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
+.brand-title { display: flex; align-items: center; gap: var(--sp-3); min-width: 0; }
+.brand h1 { font-size: var(--fs-md); color: var(--paper); line-height: 1.1; }
+.brand small { display: block; margin-top: 2px; color: var(--sand); font-family: var(--font-body); font-weight: 400;
+  font-size: var(--fs-xs); letter-spacing: 0; opacity: 0.85; }
+
+/* Logo mark: a target with the ochre tower in the middle */
+.brand-mark { flex: none; width: clamp(30px, 2.4vw + 20px, 42px); aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, var(--ochre) 0 18%, transparent 20%),
+    repeating-radial-gradient(circle, transparent 0 30%, rgba(216, 200, 166, 0.55) 31% 34%, transparent 35% 52%);
+  border: 1px solid rgba(216, 200, 166, 0.5); box-shadow: 0 0 0 4px rgba(184, 137, 59, 0.12); }
+
+.status-pill { display: inline-flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-xs); color: var(--sand);
+  border: 1px solid rgba(240, 231, 214, 0.22); background: rgba(240, 231, 214, 0.05); border-radius: 999px; padding: 5px var(--sp-3); }
+.dot { width: 0.6em; aspect-ratio: 1; border-radius: 50%; background: var(--hot); box-shadow: 0 0 0 3px rgba(224, 83, 58, 0.22); }
+.dot.on { background: var(--leaf); box-shadow: 0 0 0 3px rgba(143, 178, 124, 0.25); animation: breathe 2.4s ease-in-out infinite; }
+@keyframes breathe { 50% { box-shadow: 0 0 0 6px rgba(143, 178, 124, 0.05); } }
+
+.tabs { display: flex; gap: var(--sp-1); overflow-x: auto; margin-top: var(--sp-3); padding-bottom: var(--sp-2);
+  scrollbar-width: none; scroll-snap-type: x proximity; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; scroll-snap-align: start; min-height: calc(var(--tap) * 0.92); display: inline-flex; align-items: center; gap: var(--sp-1);
+  padding: 0 var(--sp-3); border: 1px solid transparent; border-radius: 999px; background: none; color: var(--sand);
+  font-size: var(--fs-sm); font-weight: 500; white-space: nowrap; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+.tab:hover { color: var(--paper); background: rgba(240, 231, 214, 0.08); }
+.tab.active { color: var(--ink); background: var(--paper); font-weight: 600; box-shadow: 0 6px 16px -8px rgba(0, 0, 0, 0.6); }
+.tab span { font-family: var(--font-mono); font-size: var(--fs-2xs); opacity: 0.55; margin-right: 2px; }
+
+/* Phones: a compact bar, so the sticky header does not eat the screen */
+@media (max-width: 40rem) {
+  .brand { flex-wrap: nowrap; }
+  .brand small { display: none; }
+  .tabs { margin-top: var(--sp-2); }
+}
+@media (max-width: 30rem) {
+  .pill-text { display: none; }
+  .status-pill { padding: 8px; }
+  :root { --topbar-h: 84px; }
+}

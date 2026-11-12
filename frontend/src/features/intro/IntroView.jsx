@@ -32,7 +32,7 @@ export default function IntroView({ scenario, validation, onReload, onNavigate, 
         </p>
         {scenario
           ? <button className="btn on" onClick={() => onNavigate('plan')}>Empezar por el plan →</button>
-          : <p className="mono">Para empezar, carga un escenario JSON en el recuadro de abajo.</p>}
+          : <p className="hint">Para empezar, carga un escenario JSON en el recuadro de abajo.</p>}
       </section>
 
       <section className="steps">
@@ -47,7 +47,7 @@ export default function IntroView({ scenario, validation, onReload, onNavigate, 
 
       {error && <div className="alert error">{error}</div>}
 
-      <section className="grid-2" style={{ marginTop: 24 }}>
+      <section className="grid-2 mt-m">
         {scenario
           ? <ScenarioSummary scenario={scenario} validation={validation} />
           : <div className="card stack">
@@ -57,8 +57,8 @@ export default function IntroView({ scenario, validation, onReload, onNavigate, 
         <FileUploader onUploaded={onReload} />
       </section>
 
-      <section style={{ marginTop: 32 }}>
-        <h2 style={{ marginBottom: 12 }}>Estructuras y algoritmos del proyecto</h2>
+      <section className="mt-l">
+        <h2 className="mb-m">Estructuras y algoritmos del proyecto</h2>
         <div className="concepts">
           {CONCEPTS.map(([name, text, cost]) => (
             <article key={name} className="card concept">

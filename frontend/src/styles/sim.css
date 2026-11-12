@@ -1,22 +1,25 @@
-.bar { height: 6px; border-radius: 99px; background: var(--paper-deep); overflow: hidden; }
-.bar i { display: block; height: 100%; background: var(--ink); border-radius: 99px; transition: width 0.25s linear; }
-.bar.red i { background: var(--terracotta); }
+/* Simulation panels: recruit buttons, soldier chips, enemy list and the event log */
+.recruit { display: grid; gap: var(--sp-2); }
+.recruit-btn { display: grid; justify-items: start; text-align: left; border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); gap: 2px;
+  min-height: var(--tap); }
+.recruit-btn b { font-size: var(--fs-sm); }
+.recruit-btn span { font-size: var(--fs-2xs); color: var(--ink-soft); font-family: var(--font-mono); font-weight: 500; }
 
-.recruit { display: grid; gap: 8px; }
-.recruit-btn { display: grid; text-align: left; border-radius: 12px; padding: 10px 14px; gap: 2px; }
-.recruit-btn span { font-size: 0.74rem; color: var(--ink-soft); font-family: var(--font-mono); }
-
-.chips { display: flex; flex-wrap: wrap; gap: 6px; }
-.chip { border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; font-size: 0.76rem; cursor: pointer;
-  background: var(--paper); user-select: none; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+.chip { display: inline-flex; align-items: center; min-height: calc(var(--tap) * 0.85); border: 1px solid var(--line-strong); border-radius: 999px;
+  padding: 0 var(--sp-3); font-size: var(--fs-xs); cursor: pointer; background: var(--paper-soft); user-select: none;
+  transition: background 0.15s, color 0.15s, transform 0.15s var(--ease); }
+.chip:hover { border-color: var(--ochre); transform: translateY(-1px); }
 .chip.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.chip:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
+.chip:has(input:disabled) { opacity: 0.45; cursor: not-allowed; transform: none; }
 
+.route-line { font-size: var(--fs-xs); overflow-wrap: anywhere; }
+.enemy { font-size: var(--fs-sm); display: grid; gap: var(--sp-1); }
 .enemy.dead { opacity: 0.4; text-decoration: line-through; }
-.enemy { font-size: 0.82rem; display: grid; gap: 4px; }
 
-.log { list-style: none; max-height: 260px; overflow-y: auto; display: grid; gap: 6px; font-size: 0.8rem; padding-right: 4px; }
-.log li { display: grid; grid-template-columns: 52px 16px 1fr; gap: 6px; color: var(--sand); }
+.log { list-style: none; max-height: clamp(200px, 32vh, 360px); overflow-y: auto; display: grid; gap: var(--sp-2);
+  font-size: var(--fs-xs); padding-right: var(--sp-1); scrollbar-width: thin; scrollbar-color: var(--ink-soft) transparent; }
+.log li { display: grid; grid-template-columns: clamp(42px, 4vw, 56px) 1.2em 1fr; gap: var(--sp-2); color: var(--sand); line-height: 1.45; }
 .log .mono { color: rgba(216, 200, 166, 0.6); }
 .log-combat { color: #f0b8a4 !important; }
 .log-bridge { color: #e8c37a !important; }

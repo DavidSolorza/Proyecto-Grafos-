@@ -41,8 +41,20 @@ export default function useSimulation() {
     return () => clearInterval(id);
   }, [running, speed, run]);
 
+  // Re-read the match (used when another client, like the Pygame app, changed it)
+  const refresh = useCallback(async () => {
+    try {
+      const r = await api.fetchState();
+      setState(r.state);
+      if (FINISHED.includes(r.state.status)) setRunning(false);
+    } catch {
+      setState(null);
+      setRunning(false);
+    }
+  }, []);
+
   return {
-    state, error, running, speed, setSpeed, clearError: () => setError(null),
+    refresh, state, error, running, speed, setSpeed, clearError: () => setError(null),
     finished: state ? FINISHED.includes(state.status) : false,
     togglePlay: () => setRunning((r) => !r),
     clear: () => { setRunning(false); setState(null); setError(null); },
