@@ -65,12 +65,33 @@ Abre <http://localhost:5173>. Debes ver:
 - La pantalla **Inicio** con **"Sin escenario cargado"**: la aplicación **arranca vacía** a propósito (el enunciado
   prohíbe rutas de archivo fijas). Todo empieza cargando un JSON, ver C.1.
 
-### A.5 Detenerlo
+### A.5 Abrir la ventana Pygame (interfaz principal)
 
-En cada terminal pulsa `Ctrl + C`. Para volver a empezar limpio basta con detener y volver a correr `python run.py`
+Con el backend ya corriendo (o sin él: Pygame lo inicia si no lo encuentra), en una **tercera terminal**, desde la carpeta
+del proyecto:
+
+```bash
+python desktop/main.py
+```
+
+Se abre la ventana **"La derrota del dictador General P. Tardo"** con las mismas cuatro pestañas (Inicio, Los grafos, Plan de
+defensa, Simulación), la insignia **Backend conectado** y la pantalla de Inicio vacía. Opciones:
+
+| Comando | Qué hace |
+|---|---|
+| `python desktop/main.py` | Abre Pygame; reutiliza el backend si ya corre, o lo inicia por su cuenta. |
+| `python desktop/main.py --web` | Además abre el cliente React (`npm run dev`, necesita `npm install` una vez). |
+| `python desktop/main.py --url http://127.0.0.1:5055` | Se conecta a un backend en otro puerto. |
+
+**Pygame y la web comparten la misma partida**: carga un escenario en una y míralo aparecer en la otra en un par de
+segundos. Si necesitas instalar Pygame por separado: `python -m pip install -r desktop/requirements.txt`.
+
+### A.6 Detenerlo
+
+En cada terminal pulsa `Ctrl + C`; la ventana Pygame se cierra con su botón de cerrar. Para volver a empezar limpio basta con detener y volver a correr `python run.py`
 (el estado vive en memoria).
 
-### A.6 Si algo falla
+### A.7 Si algo falla
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
@@ -80,13 +101,17 @@ En cada terminal pulsa `Ctrl + C`. Para volver a empezar limpio basta con detene
 | `No module named pytest` | Faltan las dependencias de pruebas | El mismo comando de arriba. |
 | `npm: command not found` | Node.js no está instalado | Instala Node 18+ y abre una terminal nueva. |
 | La página queda en blanco | Falta `npm install` o el servidor de Vite no corre | Repite A.3 y recarga con `Ctrl + F5`. |
+| Datos raros o cambios que "no se ven" (otro escenario, otro plan) | Quedó un servidor viejo escuchando el mismo puerto: en Windows dos procesos pueden compartir el 5000 y las peticiones se reparten entre ambos | Cierra **todas** las terminales con `python run.py` o `npm run dev` anteriores (o reinicia el equipo). Para probar sin tocar nada, usa otros puertos: `PORT=5055 python run.py`, `VITE_PORT=5188 VITE_BACKEND_URL=http://127.0.0.1:5055 npm run dev` y `python desktop/main.py --url http://127.0.0.1:5055`. |
+| La ventana Pygame no abre (`No module named pygame`) | Falta Pygame | `python -m pip install -r requirements-dev.txt` dentro de `backend`. |
 | Cambié el código del backend y no se nota | Se corre con `FLASK_DEBUG=false` (sin recarga automática) | Detén y vuelve a correr `python run.py`. |
 
 ---
 
 ## B. Verificación automática (2 minutos, sin navegador)
 
-El enunciado exige que los algoritmos se verifiquen **sin interfaz gráfica**. Con el backend preparado (A.2):
+El enunciado exige que los algoritmos se verifiquen **sin interfaz gráfica**: las 232 pruebas del backend no abren ninguna
+ventana. Las 91 pruebas de la interfaz Pygame tampoco abren una ventana real (usan un controlador de vídeo falso de SDL y
+clics simulados). Con el backend preparado (A.2):
 
 ```bash
 cd backend
@@ -96,14 +121,23 @@ cd backend
 python verificar.py
 ```
 
-Resultado esperado: una línea ✔ por cada sección del enunciado y, al final,
+Resultado esperado: una línea ✔ por cada sección del enunciado (incluida la interfaz Pygame, §13) y, al final,
 
 ```
 ✔ Sin librerías de grafos ni heapq
 ✔ Todos los archivos tienen menos de 150 líneas
 ✔ 4 escenarios de ejemplo válidos
-Suite completa: 170 passed
+Suite del backend: 232 passed
+✔ §13     Interfaz Pygame: mapa, plan, compra, transporte, rutas, puentes y resultado
+          91 passed
 RESULTADO: TODO CORRECTO
+```
+
+También ejecuta la **auditoría punto a punto** del enunciado (47 puntos contra un servidor real) y revisa que los comentarios del código
+estén en inglés. Para ver la auditoría completa y guardar su informe:
+
+```bash
+python auditar_enunciado.py --informe ../docs/informe_auditoria.md
 ```
 
 Si alguna línea sale con ✘ te dice cuál sección falla. Para ver las pruebas una por una:
@@ -118,12 +152,27 @@ Para una sola sección (por ejemplo el combate):
 python -m pytest tests/test_s5_combat.py -v
 ```
 
+Para las pruebas de la interfaz Pygame:
+
+```bash
+cd ../desktop
+```
+
+```bash
+python -m pytest tests -v
+```
+
 ---
 
 ## C. Recorrido manual (≈15 minutos)
 
-Marca cada paso. Los números esperados están verificados. **Reinicia el backend antes de empezar** para partir
-vacío. Los tres primeros pasos son con el escenario simple (`docs/escenario_general_p_tardo.json`).
+Marca cada paso. Los números esperados están verificados y son **los mismos en Pygame y en la web**: haz el recorrido en
+Pygame (`python desktop/main.py`) y repite los pasos que quieras en el navegador. **Reinicia el backend antes de empezar**
+para partir vacío. Los primeros pasos usan el escenario simple (`docs/escenario_general_p_tardo.json`).
+
+En Pygame, los nombres de los botones son los mismos que en la web, salvo que "Iniciar/Pausar" no llevan símbolo y la
+tecla `Espacio` también inicia o pausa. En el paso C.1, **Seleccionar archivo...** abre el selector de la propia ventana:
+pulsa **Ejemplos del proyecto** y elige el archivo.
 
 ### C.1 Arranque vacío y carga del JSON (§12)
 
@@ -137,7 +186,8 @@ vacío. Los tres primeros pasos son con el escenario simple (`docs/escenario_gen
 
 ### C.2 Los dos grafos (§3, §13)
 
-Pestaña **Los grafos**: alterna *Ambas capas / Red elevada GE / Laberinto GM*. Haz clic en un vértice para ver su
+Pestaña **Los grafos**: alterna *Ambas capas / Red elevada GE / Laberinto GM*. Con el escenario simple, la franja ocre y el texto muestran el
+**camino inicial de menor costo**: `M_ENTRADA > M_N1 > M_N2 > M_SALIDA (t = 23 s)`. Haz clic en un vértice para ver su
 id, tipo, altura y coordenadas. Debe verse GE (base cuadrada, candidatas rombo, helipuerto con **H**) y GM
 (entrada ▶, salida ⚑).
 
@@ -145,7 +195,7 @@ id, tipo, altura y coordenadas. Debe verse GE (base cuadrada, candidatas rombo, 
 
 Pestaña **Plan de defensa** → **Calcular plan**. Esperado: **2 torres (`V_C1`, `V_C2`), cobertura 100 %,
 árbol mínimo de 4 aristas y 45 s**; puntuaciones `V_C1` = **53.57** y `V_C2` = **23.53**. Abre "Paso a paso" para ver
-cada iteración de la selección voraz.
+cada iteración de la selección voraz y, bajo la tabla de torres, **Corredores vigilados: 3 de 3 (115 de 115 u.)**.
 
 ### C.4 Derrota si no defiendes (§11)
 
@@ -210,7 +260,22 @@ Copia un escenario, cambia **una** cosa y súbelo; debe salir un mensaje rojo cl
 Ejemplos: un segundo vértice `"type": "BASE"`, `"D0": 0`, `"time_walk": 0`, una arista a un vértice inexistente.
 Lista completa con los mensajes esperados en `guia_pruebas.md` §3.
 
-### C.14 Responsive (§13)
+### C.14 Pygame y la web a la vez (§13)
+
+Abre la ventana Pygame y el navegador (`http://localhost:5173`) con el mismo backend. En Pygame carga el escenario simple,
+calcula el plan, compra 2 Francotiradores y envíalos en moto a `V_C1`; avanza unos segundos. **Sin tocar el navegador**,
+en un par de segundos debe mostrar el mismo escenario, el mismo plan y la misma partida (reloj, presupuesto, soldados en
+`V_C1` y la bitácora). Lo contrario también funciona: lo que compres en la web aparece en Pygame.
+
+### C.15 Diseño fluido y responsive (§13)
+
+**Web:** abre las herramientas del navegador (`F12`) → modo dispositivo y prueba los anchos **320, 375, 768, 1024 y 1920 px** en las cuatro pestañas:
+no debe haber barra de desplazamiento horizontal, el texto debe crecer suavemente (cuerpo de ~14.7 px a ~17 px), la barra superior se compacta en teléfono
+(solo el punto de conexión) y, a partir de ~990 px, el mapa queda fijo a la izquierda mientras se recorren los paneles.
+
+**Pygame:** arrastra el borde de la ventana: la interfaz se escala de 0.7× a 1.8× y siempre llena la ventana (mínimo 840 × 560).
+
+**Anterior (solo web):**
 
 Abre las herramientas del navegador (`F12`) → modo dispositivo → ancho **375 px**: sin scroll horizontal, las pestañas
 se deslizan y los paneles pasan debajo del mapa.
@@ -232,5 +297,5 @@ se deslizan y los paneles pasan debajo del mapa.
 | §10 | Presupuesto disponible/reservado, nunca negativo | ✔ | C.5, C.7 |
 | §11 | Reloj lógico (0.25 s), prioridades y condiciones de fin | ✔ | C.4, C.5 |
 | §12 | JSON elegido desde la interfaz, sin rutas fijas | ✔ | C.1 |
-| §13 | Interfaz con mapa 2D, comprar, transportar, rutas, puentes, resultado | ⚠ Funciona en **React + Flask**; el enunciado nombra **Pygame** | todo C (confírmalo con el docente) |
-| §14 | Código en Git, manual de usuario y técnico, dos escenarios, videos | ⚠ Código y escenarios (4) ✔; esta guía y `guia_exposicion.md` sirven de manuales; **faltan** el reporte de uso de IA y los videos. Haz `git commit` de tus cambios cuando quieras que queden en el historial. | — |
+| §13 | Interfaz Pygame con mapa 2D, cargar y validar, árbol y torres, comprar, transportar, rutas, puentes, resultado | ✔ **Pygame** (principal) + **React** (web), ambos sobre **Flask** y con la misma partida | todo C, en especial C.14 |
+| §14 | Código en Git, manual de usuario y técnico, dos escenarios, videos | ✔ Código, escenarios (4), manual de usuario, manual técnico, reporte de uso de IA y [distribución de tareas](distribucion_tareas.md) (completa los campos **[completar]** del reporte). **Faltan los dos videos**, que deben grabar ambos integrantes. Haz `git commit` de tus cambios para que queden en el historial. | — |

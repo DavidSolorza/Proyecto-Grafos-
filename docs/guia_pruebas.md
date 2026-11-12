@@ -49,7 +49,7 @@ cd backend
 python -m pytest tests -v
 ```
 
-Resultado esperado: **170 passed**. (Si `pytest` no está instalado: `python -m pip install -r requirements-dev.txt`.) Cada archivo cubre una sección del PDF:
+Resultado esperado: **232 passed**. (Si `pytest` no está instalado: `python -m pip install -r requirements-dev.txt`.) Cada archivo cubre una sección del PDF:
 
 | Archivo | Sección | Qué comprueba |
 |---|---|---|
@@ -58,6 +58,9 @@ Resultado esperado: **170 passed**. (Si `pytest` no está instalado: `python -m 
 | `test_s4_planning.py` | §4 | MST de peso mínimo (contra fuerza bruta), distancia sobre el árbol, desempates, `K`, radio `Rv` incluido en el borde. |
 | `test_s5_combat.py` | §5 | `Ref = Rbase·(1+β·z)`, blanco de menor vida, artillero de área, frecuencia, sin ataque al llegar, una sola recompensa. |
 | `test_s6_convoy.py` | §6 | Composición del convoy, `D(q)`, `w(e)=t(e)+α·P(e)`, no retroceder si hay alternativa, no cambia a mitad de corredor. |
+| `test_s12_empty_start.py` | §12 | La aplicación arranca vacía, 409 antes de cargar, huella de sesión `/scenario/status`. |
+| `test_s3_initial_route.py` | §3 | El camino inicial de menor costo es el mínimo de todos los caminos simples (fuerza bruta) y coincide con el tiempo del convoy sin defensas. |
+| `test_fuzz_invariants.py` | §5, §7–§11 | 48 partidas aleatorias con invariantes después de cada operación (capacidad, dinero conservado, un soldado = una operación, rechazos sin efectos). |
 | `test_edge_rules.py` | §3 | Medios no permitidos (`null`), calles vs puentes, Kruskal solo a pie, validaciones nuevas. |
 | `test_repair_crew.py` | §3, §8 | La reconstrucción ocupa a N personas: espera sin cuadrilla, estados, liberación, no sale de torres. |
 | `test_s7_ground.py` | §7, §8 | Validaciones sin tocar el estado, tiempos a pie/moto, desgaste solo en moto, colapso, reconstrucción, recálculo y reanudación. |
@@ -69,9 +72,49 @@ Resultado esperado: **170 passed**. (Si `pytest` no está instalado: `python -m 
 
 Para ver solo una sección: `python -m pytest tests/test_s5_combat.py -v`.
 
+### 1.1 Pruebas de la interfaz Pygame (`desktop/tests/`)
+
+```bash
+cd desktop
+python -m pytest tests -q
+```
+
+Resultado esperado: **91 passed** (unos 17 s). No abren una ventana real: usan el controlador de vídeo `dummy` de SDL,
+simulan clics, teclas y rueda del ratón, pulsan los botones **por su nombre** y comprueban píxeles del mapa.
+
+| Archivo | Qué comprueba |
+|---|---|
+| `test_ui_store.py` | Carga de JSON (válido, roto, inexistente), plan con los números conocidos, compra, rutas, órdenes inválidas sin efecto, helicóptero. |
+| `test_ui_sync.py` | Reloj de la aplicación (velocidad, fin de partida) y cambios hechos por otro cliente (React) que Pygame recoge. |
+| `test_ui_filepicker.py` | Selector de archivos: listado, carpetas, atajos, archivo inválido, cancelar, rueda del ratón (§12, sin rutas fijas). |
+| `test_ui_map.py` | Encuadre de ambos grafos, selección de vértices, capas, convoy y soldados dibujados, calor del peligro, etiquetas de puentes. |
+| `test_ui_screens.py` | Las cuatro pantallas a varios tamaños de ventana, estado vacío, botones del plan, árbol/radios dibujados. |
+| `test_ui_s13_audit.py` | Las viñetas de §13 una por una: mapa, carga y validación, árbol y distribución, compra y transporte, rutas, puentes, indicadores, explicaciones. |
+| `test_ui_spec_points.py` | El camino inicial y los corredores vigilados se muestran en pantalla. |
+| `test_ui_fluid.py` | Escala fluida (`clamp`) de 0.7 a 1.8, sin saltos; cada pantalla llena la ventana en 5 tamaños; conversión de clics; lienzo reutilizado; degradado, sombras y pulso del convoy. |
+| `test_ui_commands.py` | Flujo completo de mando con el ratón, botones deshabilitados, cartel final, cuadrilla visible. |
+| `test_ui_integration.py` | Servidor Flask real por HTTP, dos clientes sobre una sesión, partidas completas (victoria 14.25 s, derrota 23.0 s, resistencia 30 s), helicóptero y escenario complejo. |
+
+`python verificar.py` (en `backend/`) ejecuta las dos baterías, la auditoría del enunciado y las reglas del proyecto.
+
+### 1.2 Auditoría punto a punto contra un servidor real
+
+```bash
+cd backend
+python auditar_enunciado.py
+```
+
+Inicia Flask en un puerto libre, lo maneja por HTTP como Pygame y React, y muestra una línea por punto del enunciado (47 en total, con su
+frase). Con `--informe ../docs/informe_auditoria.md` guarda el informe, que además lista las viñetas de §13 y los entregables de §14.
+
+
 ---
 
 ## 2. Pruebas manuales en la interfaz
+
+> Todos los pasos de esta sección valen **tanto en Pygame (`python desktop/main.py`) como en la web**: los nombres de
+> los botones y los números esperados son los mismos. En Pygame, "Seleccionar archivo..." abre el selector de la ventana
+> (usa el botón **Ejemplos del proyecto**).
 
 Todas empiezan igual: reinicia el backend (Ctrl+C y `python run.py`) para partir limpio y, como la app arranca
 vacía, sube el escenario que indique cada prueba desde **Inicio** (o usa **Reiniciar** dentro de la simulación).
@@ -316,6 +359,16 @@ Otras reglas que puedes romper de la misma forma (cada una hace fallar al menos 
 
 ---
 
+## 4.1 Comprobar que las pruebas de Pygame detectan errores (opcional)
+
+| Archivo | Cambio | Debe fallar |
+|---|---|---|
+| `desktop/tardo_ui/app.py` | Quitar la línea `self.ui.click = None` de `open_picker` | `test_scrolling_a_long_folder_never_goes_out_of_range` (el clic que abre el diálogo también elegiría un archivo) |
+| `desktop/tardo_ui/store.py` | Cambiar `0.25 * self.speed` por `0.25` | `test_running_follows_the_speed_and_stops_when_the_match_ends` y `test_speed_buttons_and_space_bar_control_the_clock` |
+| `desktop/tardo_ui/commands.py` | Quitar `if self.finished: self.running = False` en `_apply` | `test_running_follows_the_speed_and_stops...` |
+| `desktop/tardo_ui/map/canvas.py` | Quitar `interactive and` | `test_clicking_the_end_banner_does_not_select...` |
+| `desktop/tardo_ui/ui.py` | Quitar `not self.lock and` en `clicked` | `test_a_modal_blocks_the_screen_behind_it` |
+
 ## 5. Matriz del enunciado → dónde se verifica
 
 | Requisito del PDF | Automática | Manual |
@@ -333,12 +386,12 @@ Otras reglas que puedes romper de la misma forma (cada una hace fallar al menos 
 | §10 Presupuesto disponible/reservado, sin saldo negativo | `test_s9_air_budget.py` | 2.4, 2.9 |
 | §11 Reloj, prioridades, condiciones de fin | `test_s11_end.py` | 2.10 |
 | §12 JSON elegido desde la interfaz | `test_s12_api.py` | 2.1 |
-| §13 Interfaz: cargar, MST, comprar, transportar, rutas, puentes, resultado | — | 2.1 a 2.12 |
+| §13 Interfaz Pygame: mapa, cargar y validar, MST, comprar, transportar, rutas, puentes, resultado | `desktop/tests/` (91 pruebas) | 2.1 a 2.12 |
 
 ## 6. Límites que debes conocer
 
-- El enunciado menciona **Pygame**; este proyecto usa **React + Flask** (decisión del equipo desde la propuesta
-  inicial). Confírmalo con el docente.
+- La interfaz Pygame se verificó sin ventana real (renderizado fuera de pantalla y clics simulados, además de capturas
+  revisadas). Antes de la sustentación, ábrela en tu pantalla y recorre la sección 2 una vez.
 - La cola de prioridad de Dijkstra es un **montículo binario propio** (`backend/src/core/structures/min_heap.py`);
   no se usa `heapq`. Una prueba revisa que ningún archivo de `backend/src` lo importe.
 - La aplicación **arranca vacía**: no hay ninguna ruta de escenario fija; el JSON se elige siempre desde la interfaz.

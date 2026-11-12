@@ -9,23 +9,26 @@ sección 14 del enunciado. Notación: **V** = vértices, **E** = aristas de GE, 
 
 Documentos relacionados: [manual de usuario](manual_usuario.md), [reporte de uso de IA](reporte_uso_ia.md),
 [guía de ejecución y verificación](guia_ejecucion_y_verificacion.md), [guía de pruebas](guia_pruebas.md) y
-[guía de exposición](guia_exposicion.md).
+[guía de exposición](guia_exposicion.md) y [distribución de tareas](distribucion_tareas.md).
 
 ---
 
 ## 1. Arquitectura
 
 ```
-┌──────────────────────────┐   HTTP/JSON (/api)   ┌────────────────────────────────────────────┐
-│ Frontend (React + Vite)  │ ───────────────────► │ Backend (Flask)                            │
-│  vistas · hooks · SVG    │ ◄─────────────────── │  infraestructura  → rutas REST             │
-└──────────────────────────┘                      │  aplicación       → algoritmos y casos     │
-                                                  │  dominio          → entidades y grafos     │
-                                                  └────────────────────────────────────────────┘
+┌─────────────────────┐                  ┌────────────────────────────────────────────┐                  ┌──────────────────────────┐
+│ Pygame (escritorio) │  HTTP/JSON /api  │ Backend (Flask)                            │  HTTP/JSON /api  │ Frontend (React + Vite)  │
+│ interfaz del §13    │ ◄──────────────► │  infraestructura  → rutas REST             │ ◄──────────────► │  vistas · hooks · SVG    │
+└─────────────────────┘                  │  aplicación       → algoritmos y casos     │                  └──────────────────────────┘
+                                         │  dominio          → entidades y grafos     │
+                                         └────────────────────────────────────────────┘
 ```
 
-- **Separación exigida (§2).** Los grafos y algoritmos no importan Flask ni la interfaz. Por eso las 170 pruebas
-  corren sin servidor ni navegador. La interfaz es un cliente que solo muestra el estado que entrega la API.
+- **Tres piezas que se complementan.** Flask es la única fuente de verdad (estado y algoritmos); Pygame es la interfaz
+  gráfica pedida por el enunciado y React es un cliente web equivalente que además sirve de panel de observación. Los dos
+  clientes comparten la misma sesión (ver §12).
+- **Separación exigida (§2).** Los grafos y algoritmos no importan Flask, Pygame ni React. Por eso las 232 pruebas del
+  backend corren sin servidor ni ventana. Las interfaces son clientes que solo muestran el estado que entrega la API.
 - **Capas por funcionalidad** (`backend/src/features/`): cada carpeta tiene `domain/` (entidades puras),
   `application/` (algoritmos y casos de uso) e `infrastructure/` (rutas Flask).
 
@@ -37,7 +40,8 @@ Documentos relacionados: [manual de usuario](manual_usuario.md), [reporte de uso
 | `features/labyrinth/` | GM: grafo, peligro `D(q)`, `P(e)`, `w(e)` y navegación del convoy. |
 | `features/scenario/` | Carga y validación del JSON, `ScenarioManager`, sesión en memoria. |
 | `features/simulation/` | Reloj lógico, mundo, convoy, combate, puentes, transporte terrestre y aéreo, serialización. |
-| `frontend/src/` | `features/` (intro, graphs, plan, simulation, map), `hooks/`, `components/`, `styles/`. |
+| `frontend/src/` | Cliente React: `features/` (intro, graphs, plan, simulation, map), `hooks/`, `components/`, `styles/`. |
+| `desktop/tardo_ui/` | Cliente Pygame: cliente de la API, estado, widgets, mapa, pantallas y selector de archivos (ver §12). |
 
 - **Sin librerías de grafos (§2).** Solo se usan estructuras de la biblioteca estándar de Python (`dict`, `list`,
   `set`, `deque`, `sorted`). La cola de prioridad y el Union-Find son propios. `python verificar.py` comprueba por
@@ -171,7 +175,7 @@ construir los grafos (`validator.py`, `validator_params.py`) y devuelve todos lo
       { "id": "M_C1", "u": "M_ENTRADA", "v": "M_N1", "length": 40.0, "speed_allowed": 5.0 }  // ambos > 0
     ]
   },
-  "candidates_meta": [ { "vertex_id": "V_C1", "rv": 25.0 } ],   // vertex_id debe ser CANDIDATE; rv > 0
+  "candidates_meta": [ { "vertex_id": "V_C1", "rv": 25.0 } ],   // una entrada por CADA candidata (obligatoria); rv > 0; sin repetidas
   "convoy": { "tanks": 1, "trucks": 1, "robot_soldiers": 2 },    // enteros >= 0, al menos una máquina
   "defenders_config": {                                          // los tres tipos son obligatorios
     "infantry": { "cost": 100, "damage": 10,  "base_range": 5.0,  "frequency": 1.0 },
@@ -188,7 +192,7 @@ Validaciones que rechazan el archivo (con mensaje en español): id repetido; una
 coordenada no positiva en GE; tipo inválido; arista a un vértice inexistente o a sí misma; tiempo no positivo; arista sin
 ningún medio; puente con resistencia no entera, cero o actual mayor que la máxima; GM sin exactamente una entrada y una
 salida distintas; corredor con longitud o velocidad no positiva; `D0 ≤ 0`; `K` no entero o `< 1`; convoy vacío;
-`rv` no positivo o de un vértice que no es candidato; soldado sin costo, daño, alcance o frecuencia positivos;
+`rv` no positivo, de un vértice que no es candidato, repetido o **ausente en alguna candidata** (cada candidata debe tener su radio); soldado sin costo, daño, alcance o frecuencia positivos;
 helicóptero con velocidad 0. Además, al subirlo se comprueba que exista camino entre la entrada y la salida de GM. Si algo
 falla, el escenario activo **no cambia**.
 
@@ -259,6 +263,13 @@ la técnica de entradas obsoletas (si al extraer `cost > best[v]`, se descarta).
 
 - **GE (soldados):** costo = tiempo del medio elegido; se omiten puentes destruidos y aristas que no permiten ese medio.
 - **GM (convoy):** costo = `w(e)`; se calcula **desde la salida** (el grafo no es dirigido).
+
+### 6.3b Camino inicial de menor costo (`route_finder.py`)
+
+Al cargar el escenario, además de comprobar que entrada y salida están conectadas (BFS), se calcula el camino de **menor costo** con
+Dijkstra y el montículo propio, usando `t(e) = longitud / velocidad`. El resultado (`vertices`, `corredores`, `costo`) se guarda en
+el escenario (`initial_route`), lo entrega `GET /scenario/current` y las interfaces lo dibujan. Con un convoy sin defensas, el peligro
+es cero y el convoy tarda exactamente ese tiempo (cuantizado al paso de 0,25 s); una prueba lo verifica.
 
 ### 6.4 Peligro y navegación reactiva (`danger.py`, `router.py`, `convoy.py`)
 
@@ -336,7 +347,10 @@ prioridad del enunciado: ① todas las máquinas destruidas (victoria por elimin
 | `max_uses` del helicóptero | Total de vuelos permitidos | El enunciado habla de "helicópteros" con "número máximo de usos"; se modela un contador. |
 | Dónde se detiene un soldado | Solo en base o torres | Son las únicas posiciones donde un soldado puede permanecer según el modelo. |
 | Estado del servidor | En memoria, un usuario | Alcanza para la demostración; reiniciar limpia todo. |
-| Interfaz | React + Flask en lugar de Pygame | Decisión del equipo desde la propuesta inicial; el enunciado nombra Pygame (**confirmar con el docente**). |
+| Helipuerto (`HELIPORT`) | Tipo de posición sin comportamiento propio; los vuelos salen de la base o de torres y llegan a torres | El enunciado define el aterrizaje y el reparto solo en torres. |
+| Eventos temporales | Contadores por entidad avanzados por el reloj de pasos de 0,25 s | Evita una cola de eventos; cuesta O(entidades) por paso y es determinista. |
+| Destino de un traslado | Una torre del plan o la base | La capacidad (ocupantes + reservas) está definida para torres. |
+| Interfaz | Pygame como interfaz principal (el enunciado lo pide) + React como cliente web, ambos sobre una API Flask | Cumple §13 sin mezclar lógica con dibujo; React queda como panel web y de observación sobre la misma sesión. |
 
 ---
 
@@ -376,6 +390,7 @@ estado 400 (datos inválidos) o 409 (operación no permitida ahora).
 |---|---|---|
 | `GET /health` | — | Estado del servicio. |
 | `GET /scenario/current` | — | Escenario activo y validación; `loaded: false` y `data: null` si no hay ninguno. |
+| `GET /scenario/status` | — | Huella barata de la sesión (revisiones y resumen de la partida) para que los clientes sepan cuándo releer. |
 | `POST /scenario/upload` | archivo `file` (multipart) o JSON | Valida y activa un escenario nuevo. |
 | `POST /defense/plan` | — | Kruskal + selección de torres. 409 si el combate ya inició o no hay escenario. |
 | `GET /defense/plan` | — | Último plan (o `null`). |
@@ -391,10 +406,18 @@ estado 400 (datos inválidos) o 409 (operación no permitida ahora).
 
 ## 10. Pruebas y verificación
 
-- 170 pruebas automáticas en `backend/tests/` (una por sección del enunciado) y el comando `python verificar.py`, que
-  además revisa reglas del proyecto (sin librerías de grafos ni `heapq`, archivos de menos de 150 líneas, escenarios válidos).
+- 232 pruebas automáticas en `backend/tests/` (una por sección del enunciado) y 91 en `desktop/tests/` (cliente Pygame).
+  El comando `python verificar.py` ejecuta ambas y además revisa reglas del proyecto (sin librerías de grafos ni
+  `heapq`, archivos de menos de 150 líneas, escenarios válidos).
 - **Verificación contra fuerza bruta:** el MST se compara con todos los conjuntos posibles de V−1 aristas; Dijkstra
   contra todas las rutas simples y contra Bellman-Ford en grafos aleatorios; el montículo contra `sorted`.
+- **Pruebas de propiedades (fuzz):** `test_fuzz_invariants.py` juega 48 partidas aleatorias (4 escenarios, convoy normal y lento, 6 semillas)
+  con órdenes válidas e inválidas y, después de cada operación, comprueba los invariantes: capacidad de torre (ocupantes + reservas ≤ 3),
+  dinero conservado (`inicial + ganado = disponible + reservado + gastado`) y nunca negativo, una recompensa por máquina,
+  ningún soldado en dos operaciones a la vez, estados coherentes, puentes consistentes, traslados terrestres gratis, órdenes rechazadas
+  sin efectos y actualizaciones detenidas al terminar. Rompiendo 10 reglas a propósito, el fuzz detectó 9 y las pruebas específicas la décima.
+- **Auditoría punto a punto:** `python auditar_enunciado.py` inicia el servidor Flask real, lo maneja por HTTP como lo hacen Pygame y React
+  y verifica 47 puntos del enunciado, con su informe en [`informe_auditoria.md`](informe_auditoria.md).
 - **Pruebas de mutación manuales:** se rompieron a propósito reglas del código (orden de fin de partida, desgaste al
   caminar, recompensa duplicada, cuadrilla, medios no permitidos…) y se comprobó que alguna prueba falla. Resultado
   final: todas las mutaciones probadas fueron detectadas.
@@ -402,9 +425,163 @@ estado 400 (datos inválidos) o 409 (operación no permitida ahora).
 
 ## 11. Limitaciones conocidas
 
-- Interfaz web (React) en lugar de Pygame.
+- La interfaz Pygame se verificó con pruebas sin ventana real (renderizado fuera de pantalla, clics simulados y capturas
+  revisadas); conviene probarla en una pantalla real antes de la sustentación. La tipografía usa Segoe UI en Windows y la
+  mejor fuente disponible en otros sistemas.
+- Los clientes se sincronizan por sondeo cada 1.5 s (no hay *push*): un cambio hecho en uno aparece en el otro con ese retraso.
 - Un solo usuario y estado en memoria; no hay persistencia entre reinicios.
 - La obra de un puente no requiere desplazar a la cuadrilla hasta el lugar.
 - El paso de 0.25 s cuantiza los eventos (un soldado que llega en 8.00 s dispara en 8.25 s); un `dt` menor que 0.25 s
   avanza igualmente un paso completo.
 - Un único contador de usos para los helicópteros.
+
+---
+
+## 12. Cliente de escritorio (Pygame)
+
+### 12.1 Papel dentro del sistema
+
+El enunciado (§13) pide una interfaz gráfica en **Pygame**. El proyecto tiene tres piezas que se complementan:
+
+```
+┌─────────────────────┐        ┌───────────────────────────┐        ┌─────────────────────┐
+│ Pygame (escritorio) │  HTTP  │ Flask (API + algoritmos)  │  HTTP  │ React (web)         │
+│ interfaz principal  │ ◄────► │ única fuente de verdad:   │ ◄────► │ interfaz web y      │
+│ del enunciado       │        │ grafos, plan, partida     │        │ panel de observación│
+└─────────────────────┘        └───────────────────────────┘        └─────────────────────┘
+```
+
+- **Flask** guarda todo el estado (escenario, plan, partida) y ejecuta todos los algoritmos. No dibuja nada.
+- **Pygame** y **React** son dos *clientes* de la misma API REST: piden el estado, lo dibujan y envían órdenes.
+  Ninguno contiene reglas del juego. Por eso los algoritmos se verifican **sin ejecutar Pygame** (§2 del enunciado).
+- Como comparten la sesión, se pueden usar a la vez: se puede jugar en Pygame y proyectar la partida en el navegador, o
+  al revés. Cada cliente detecta los cambios del otro (ver 12.6).
+
+### 12.2 Módulos (`desktop/tardo_ui/`)
+
+| Archivo | Responsabilidad |
+|---|---|
+| `api.py` | `ApiClient`: un método por endpoint; transporte HTTP con la biblioteca estándar; errores como `ApiError` con el mensaje del backend. |
+| `launcher.py` | Si no hay API escuchando, inicia Flask dentro del proceso (en un hilo); si ya corre, la reutiliza. |
+| `store.py`, `commands.py` | Estado de la interfaz y operaciones (cargar, planificar, comprar, enviar, ruta, reloj, sincronizar). **Sin Pygame**: se prueban solas. |
+| `ui.py`, `theme.py` | Widgets de modo inmediato (botón, tarjeta, texto, barra, insignia), paleta beige/negro, tipografías y la escala fluida `ui_scale`. |
+| `effects.py`, `header.py` | Degradados y sombras con caché; barra superior con logotipo y pestañas. |
+| `filepicker.py` | Selector de archivos dentro de la ventana (requisito §12: sin rutas fijas). |
+| `map/view.py` | Transformación mundo → pantalla: un solo encuadre para GE y GM, y selección del vértice bajo el ratón. |
+| `map/layers.py`, `map/units.py`, `map/canvas.py` | Dibujo: corredores con calor de peligro, caminos y puentes, vértices, torres, radios `Rv`, soldados, convoy, helicópteros. |
+| `screens/` | `home.py`, `graphs.py`, `plan.py`, `sim.py` (+ `sim_controls.py`, `sim_transport.py`, `sim_convoy.py`), `common.py`. |
+| `app.py` | Ventana, pestañas, cuadro (frame) y avisos. |
+| `main.py` | Punto de entrada: `python desktop/main.py [--url URL] [--web]`. |
+
+### 12.3 Un cuadro (frame)
+
+1. Se leen los eventos de Pygame (ratón, teclado, rueda, cierre, cambio de tamaño).
+2. `Ui.begin` toma el clic del cuadro; `Store.tick_real` avanza la partida si está en marcha o sincroniza si no.
+3. Se dibuja la pantalla activa. En el **modo inmediato** cada botón se dibuja y devuelve `True` si fue pulsado, así que
+   la lógica está junto al dibujo y no hace falta un árbol de widgets.
+4. Si hay un diálogo abierto (selector de archivos) se dibuja encima y los controles de atrás ignoran el clic.
+5. Se muestra el aviso (verde si salió bien, rojo con el motivo si el backend rechazó la orden).
+6. Si la escala no es 1.0, el lienzo lógico se estira a la ventana (ver §13.2).
+
+Cada botón se registra en `ui.hits` por nombre, lo que permite probar la interfaz pulsando botones por su nombre.
+
+### 12.4 Dos relojes distintos
+
+- **Reloj lógico** (segundos de la simulación): vive en Flask y avanza en pasos de 0.25 s con `POST /simulation/tick`.
+- **Reloj de la aplicación** (tiempo real): cada 250 ms Pygame pide un avance de `0.25 × velocidad` segundos lógicos.
+  Los cuadros se dibujan a 60 por segundo, pero **la simulación no depende de la frecuencia de dibujo** (§11).
+
+### 12.5 Selector de archivos y escenario (§12)
+
+Pygame no contiene ninguna ruta de escenario. El botón **Seleccionar archivo...** abre un navegador de carpetas dentro
+de la ventana (carpetas y archivos `.json`, atajos a *Inicio*, *Ejemplos del proyecto* y las unidades de disco). Al elegir
+un archivo, Pygame lo lee y lo envía a `POST /scenario/upload`; **es el backend quien lo valida** y devuelve el motivo si
+se rechaza. El diálogo recuerda la última carpeta usada.
+
+### 12.6 Sincronización entre clientes
+
+`GET /scenario/status` devuelve una huella barata de la sesión: contadores de revisión (`scenario`, `plan`, `match`) y un
+resumen de la partida (reloj, estado, número total de eventos, soldados y dinero). Cada 1.5 s, y solo cuando no está
+ejecutando su propia partida, cada cliente compara la huella con la última que vio y, **solo si cambió**, vuelve a leer
+escenario, plan y partida. Tras un cambio propio recuerda la nueva huella para no releer sin necesidad. Costo: una petición
+pequeña por intervalo.
+
+### 12.7 Qué pide la sección 13 y dónde está
+
+| Requisito de §13 | En Pygame |
+|---|---|
+| Representar en 2D ambos grafos, base, candidatos, torres, soldados, convoy y puentes | Mapa (`map/`) en *Los grafos*, *Plan* y *Simulación* |
+| Cargar y validar escenarios | *Inicio*: selector de archivos y tres insignias de validación; el motivo del rechazo aparece en un aviso |
+| Inspeccionar árbol mínimo y distribución propuesta | *Plan*: árbol `T_E` (verde), radios `Rv`, corredores vigilados, tabla de torres, paso a paso de la selección voraz |
+| Comprar soldados y ordenar transportes | *Simulación*: botones de compra; soldados, destino y medio (a pie, moto, helicóptero) |
+| Consultar rutas y resultados algorítmicos | **Ver ruta**, tabla "¿Por qué ese camino?", pestaña **Corredores** (`t`, `P`, `w`), puntuaciones `S(p)` |
+| Observar destrucción y habilitación de puentes | Etiquetas de los puentes (`n/n`, `X 30s`, `X sin cuadrilla`) y bitácora |
+| Consultar indicadores y resultado final | Reloj, presupuesto, vida de las máquinas y cartel de resultado (**Jugar de nuevo** / **Ver mapa**) |
+| Explicar qué operación ocurrió y por qué | Bitácora ("qué ocurrió y por qué") y avisos con el motivo de cada rechazo |
+
+### 12.8 Decisiones
+
+| Decisión | Por qué |
+|---|---|
+| Pygame es un cliente de la API, no importa el backend | Mantiene la separación lógica / algoritmos / interfaz y permite que Pygame y React compartan una sola partida. |
+| El arranque inicia Flask si hace falta | Un solo comando abre el juego completo; si ya corre (por ejemplo junto a React), se reutiliza. |
+| Interfaz de modo inmediato | Pocas líneas, la lógica junto al dibujo y fácil de probar por nombre de botón. |
+| `store.py` y `commands.py` sin Pygame | El comportamiento se prueba sin ventana. |
+| Selector de archivos propio | No depende de otra biblioteca gráfica y cumple "sin rutas fijas" dentro de la misma ventana. |
+| Sondeo (polling) cada 1.5 s y no *push* | Sencillo y suficiente; no hay que mantener conexiones abiertas. |
+
+### 12.9 Pruebas del cliente
+
+91 pruebas en `desktop/tests/` que corren **sin ventana real** (controlador de vídeo `dummy` de SDL): se simulan clics,
+teclas y rueda del ratón; se pulsan los botones por nombre; se comprueban píxeles del mapa (árbol verde, radios, puente caído en
+rojo); se juegan partidas completas (victoria a los 14.25 s, derrota a los 23.0 s, victoria por resistencia) y se prueba el
+arranque real con un servidor HTTP. Se rompieron a propósito 19 reglas del código del cliente y las 19 fueron detectadas.
+
+---
+
+## 13. Diseño visual y comportamiento responsive
+
+Las dos interfaces comparten la paleta (beige "papel", negro "tinta" y tres acentos apagados: ocre = torres, terracota = enemigo,
+salvia = defensores) y se adaptan a cualquier tamaño de pantalla con el mismo principio de **`clamp(mínimo, preferido, máximo)`**: un valor
+que sigue al tamaño de la ventana, pero nunca baja de un mínimo legible ni sube de un máximo cómodo.
+
+### 13.1 Web (React): tokens fluidos en `frontend/src/styles/`
+
+| Archivo | Contenido |
+|---|---|
+| `base.css` | Tokens (paleta, escala tipográfica, espaciados, radios, sombras, área táctil), reinicio, rejillas y utilidades. |
+| `nav.css` | Barra superior pegajosa con efecto de vidrio, logotipo y pestañas en píldora. |
+| `ui.css` | Tarjetas, botones, insignias, alertas y controles de formulario. |
+| `data.css` | Fichas de datos, tablas, barras, bloque didáctico y fórmulas. |
+| `map.css`, `intro.css`, `sim.css` | Mapa SVG, pantalla de inicio y paneles de la simulación. |
+
+- **Tipografía fluida:** ocho tamaños (`--fs-2xs` a `--fs-hero`) definidos con `clamp()`, por ejemplo `--fs-base: clamp(0.92rem, 0.86rem + 0.28vw, 1.06rem)`:
+  el texto del cuerpo crece de unos 14.7 px en un teléfono de 320 px a unos 17 px en un monitor de 1920 px.
+- **Espaciado fluido:** `--sp-1` a `--sp-6` y `--pad-x` con `clamp()`: los márgenes y huecos respiran más en pantallas grandes.
+- **Radios, sombras y área táctil:** `--radius`, `--radius-sm` y `--tap` (40 a 48 px) también son fluidos. En pantallas táctiles
+  (`@media (pointer: coarse)`) todos los controles miden al menos 44 px.
+- **Rejillas fluidas:** `repeat(auto-fit, minmax(min(100%, clamp(...)), 1fr))` en pasos, conceptos y fichas: el número de columnas se ajusta solo.
+  La disposición mapa + panel lateral aparece desde 62 rem; por debajo, todo se apila.
+- **Mapa:** el SVG usa `viewBox`, así que sus etiquetas y figuras escalan con el contenedor; su altura máxima es `min(72vh, 46rem)`.
+  En pantallas anchas el mapa queda fijo (`position: sticky`) mientras se recorren los paneles.
+- **Teléfonos:** la barra superior se compacta (sin subtítulo y con el estado reducido a un punto) para no ocupar la pantalla.
+- **Movimiento:** hay animaciones suaves de entrada y de pulso del convoy, y se desactivan con `prefers-reduced-motion`.
+- **Sin estilos en línea de tamaño:** las clases utilitarias (`.note`, `.fine`, `.mt-*`, `.start`...) reemplazan los `style={{ fontSize }}`.
+
+Comprobaciones: `python verificar.py` incluye "Web fluida" (cuenta los usos de `clamp()` y falla si aparece un `font-size` fijo en px o rem o un
+`fontSize` en línea). Además se midió en el navegador, de 320 a 1920 px y en las cuatro pestañas, que no hay desborde horizontal.
+
+### 13.2 Pygame: escala fluida de toda la ventana
+
+La ventana de Pygame se puede redimensionar libremente (mínimo 840 × 560). La interfaz se dibuja en un **lienzo lógico** cuyo tamaño es el de la
+ventana dividido por una escala `ui_scale(ancho, alto) = clamp(0.7, min(ancho/1360, alto/820), 1.8)` (`theme.py`):
+
+- Cerca del tamaño de diseño (1360 × 820) la escala es exactamente 1.0 y se dibuja sin remuestrear, para que el texto quede nítido.
+- En ventanas grandes todo crece hasta 1.8 veces y en ventanas pequeñas se reduce hasta 0.7; el diseño siempre llena la ventana completa.
+- Los clics llegan en píxeles de la ventana y `App` los convierte al lienzo lógico; las pantallas no conocen la escala.
+
+Pulido visual (`effects.py`, `header.py`, `ui.py`, `map/`): degradados y sombras suaves cacheados, cabecera con logotipo y pestañas en píldora, mapa con
+rejilla de puntos y resplandor cálido, halo sobre las torres elegidas y un anillo que se expande alrededor del convoy.
+
+Pruebas: `desktop/tests/test_ui_fluid.py` (16 pruebas) comprueba el recorte de la escala, su crecimiento sin saltos, que cada pantalla llene la ventana
+en cinco tamaños, la conversión de clics, la reconstrucción del lienzo solo cuando cambia el tamaño y los efectos visuales.

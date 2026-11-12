@@ -6,7 +6,8 @@ V = vértices, E = aristas.
 ## 1. Idea en una frase
 
 Dos grafos independientes comparten el plano: el convoy camina por **GM** y los soldados defienden desde **GE**.
-Solo se relacionan por distancia (alcance de disparo).
+Solo se relacionan por distancia (alcance de disparo). Tres piezas lo hacen funcionar: **Flask** (estado y algoritmos),
+**Pygame** (la interfaz gráfica pedida) y **React** (cliente web); Pygame y React usan la misma API y la misma partida.
 
 ## 2. Estructuras de datos
 
@@ -49,6 +50,8 @@ Solo se relacionan por distancia (alcance de disparo).
 
 ## 5. Guion de demo (5 minutos)
 
+0. Abrir `python desktop/main.py --web`: se ven la ventana Pygame y el navegador con la misma sesión.
+
 1. **Inicio**: mostrar el escenario cargado y los invariantes verificados. Subir `escenario_complejo.json`.
 2. **Los grafos**: alternar GE / GM y hacer clic en vértices.
 3. **Plan de defensa** (escenario complejo): calcular; activar/desactivar árbol y radios; abrir "Paso a paso" y explicar
@@ -59,6 +62,16 @@ Solo se relacionan por distancia (alcance de disparo).
 5. Probar el helicóptero con 4 soldados hacia una torre y ver cómo reparte el excedente.
 
 ## 6. Preguntas probables
+
+- *¿Por qué Pygame, Flask y React a la vez?* Pygame es la interfaz que pide el enunciado; Flask concentra el estado y los
+  algoritmos para poder verificarlos sin interfaz; React es un cliente web equivalente que permite proyectar o vigilar la
+  partida. Los dos clientes hablan con la misma API, así que no repiten ninguna regla del juego.
+- *¿Cómo se enteran Pygame y React de lo que hace el otro?* Consultan cada 1.5 s `GET /scenario/status`, una huella
+  barata de la sesión, y solo releen todo si cambió.
+- *¿Por qué la interfaz Pygame es de "modo inmediato"?* Cada botón se dibuja y devuelve si fue pulsado: la lógica queda
+  junto al dibujo y se puede probar pulsando botones por su nombre.
+- *¿Cómo se prueba una interfaz gráfica sin ventana?* Con el controlador de vídeo `dummy` de SDL: se dibuja en una
+  superficie en memoria, se simulan los clics y se comprueban estados y píxeles.
 
 - *¿Por qué el MST no elimina las demás aristas?* Es solo una referencia de planificación (distancias D_T); los soldados siguen usando todo el grafo.
 - *¿Qué pasa si hay dos MST posibles?* El orden por (tiempo, id) hace que siempre salga el mismo.
@@ -72,6 +85,7 @@ Solo se relacionan por distancia (alcance de disparo).
   puente: la obra solo ocupa tiempo y personas. Con `bridge_repair_crew = 0` (valor por defecto) no necesita gente.
 - Un tiempo `null` en `time_walk` o `time_moto` significa que ese medio no puede usar la arista. El árbol de Kruskal
   es "a pie": las posiciones que solo se alcanzan por aristas solo-moto quedan fuera del árbol y no pueden ser torres.
+- La sincronización entre Pygame y React es por sondeo cada 1.5 s (no hay *push*).
 - `max_uses` del helicóptero es el total de vuelos permitidos; no se modelan varios aparatos.
 - Un soldado solo se detiene en la base o en una torre (no en vértices de tránsito); si se queda sin ruta, queda
   "detenido" donde esté y reanuda al cambiar la conectividad.

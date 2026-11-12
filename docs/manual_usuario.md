@@ -2,8 +2,8 @@
 
 **"La derrota del dictador General P. Tardo" — simulador de defensa con grafos**
 
-Este manual explica cómo usar la aplicación, pantalla por pantalla, y cómo jugar una partida completa. No necesitas
-saber programar. Para instalar y ejecutar el programa, sigue
+Este manual explica cómo usar el simulador (ventana **Pygame** o navegador **web**, que funcionan igual), pantalla por
+pantalla, y cómo jugar una partida completa. No necesitas saber programar. Para instalar y ejecutar el programa, sigue
 [`guia_ejecucion_y_verificacion.md`](guia_ejecucion_y_verificacion.md) (sección A). Para entender cómo está construido,
 ver el [manual técnico](manual_tecnico.md).
 
@@ -25,7 +25,31 @@ una máquina viva llega a la salida.
 Los dos mapas son **independientes**: el convoy camina por el laberinto (grafo **GM**) y tus soldados se mueven por la red
 elevada (grafo **GE**). Solo se relacionan por la **distancia**: una torre dispara a las máquinas que quedan a su alcance.
 
-## 2. Primer vistazo
+## 2. Las dos interfaces y cómo abrirlas
+
+El simulador tiene dos pantallas que muestran **la misma partida** (las dos hablan con el mismo servidor Flask):
+
+| Interfaz | Cómo se abre | Para qué |
+|---|---|---|
+| **Pygame** (ventana de escritorio) | `python desktop/main.py` | Es la interfaz principal pedida por el enunciado. Si el servidor no está corriendo, el propio programa lo inicia. |
+| **Web** (navegador) | Abre `http://localhost:5173` con el servidor y `npm run dev` corriendo | La misma aplicación en el navegador; sirve también para proyectar o vigilar la partida. |
+
+Puedes usar **las dos a la vez**: lo que haces en una (cargar, comprar, enviar, avanzar el reloj) aparece en la otra en
+menos de dos segundos. Para abrir las tres piezas con un solo comando: `python desktop/main.py --web`. Los pasos de
+instalación están en [`guia_ejecucion_y_verificacion.md`](guia_ejecucion_y_verificacion.md) (sección A).
+
+**Particularidades de la ventana Pygame**
+
+- Se puede cambiar de tamaño libremente (mínimo 840 × 560): la interfaz se adapta y se escala sola, sin cortar ningún panel.
+- **Seleccionar archivo...** abre un selector dentro de la ventana: haz clic en una carpeta para entrar, en `..` para subir
+  y en un archivo `.json` para elegirlo. Los botones de arriba llevan a *Inicio*, a *Ejemplos del proyecto* y a las
+  unidades de disco. **Cancelar** o la tecla `Esc` lo cierran.
+- En *Simulación*, la tecla `Espacio` inicia o pausa el reloj. La rueda del ratón desplaza la bitácora y la lista de archivos.
+- Bajo el mapa hay dos pestañas: **Bitácora** (qué ocurrió y por qué) y **Corredores** (tiempo, peligro y peso de cada
+  corredor del laberinto).
+- Haz clic en un vértice para ver sus datos; el aviso verde o rojo de abajo explica el resultado de cada operación.
+
+## 3. Primer vistazo
 
 La aplicación **arranca vacía**: no hay ningún escenario cargado hasta que tú elijas un archivo. Arriba a la derecha
 verás un punto verde con **"Backend conectado"** (si está rojo, el servidor no está corriendo). La barra superior tiene
@@ -40,9 +64,10 @@ cuatro secciones:
 
 Si entras a una sección sin haber cargado un escenario, verás "Aún no hay un escenario cargado" y un botón para volver a Inicio.
 
-## 3. Paso 1 — Cargar un escenario (Inicio)
+## 4. Paso 1 — Cargar un escenario (Inicio)
 
-1. En el cuadro **Cargar escenario**, pulsa **Seleccionar archivo** y elige un archivo `.json`.
+1. En el cuadro **Cargar escenario**, pulsa **Seleccionar archivo** (en Pygame se abre el selector de la ventana; en la web,
+   el del navegador) y elige un archivo `.json`.
 2. Si es válido, verás un mensaje verde y el **resumen**: presupuesto, número máximo de torres (K), tiempo de referencia
    D₀, coeficientes α (peligro) y β (altura), tiempo de reparación de puentes, personas por reparación, composición del convoy y
    tres insignias de comprobación (una sola base, la base tiene componente conexa y existe camino entrada → salida).
@@ -62,7 +87,7 @@ Puedes cargar otro escenario en cualquier momento: reemplaza el actual y reinici
 Para crear el tuyo, copia uno de estos archivos y modifícalo (el significado de cada campo está en el
 [manual técnico](manual_tecnico.md), sección 4).
 
-## 4. Paso 2 — Mirar los grafos (Los grafos)
+## 5. Paso 2 — Mirar los grafos (Los grafos)
 
 Muestra los dos mapas en el mismo plano. Con los botones **Ambas capas / Red elevada GE / Laberinto GM** eliges
 qué ver. Haz **clic en un vértice** para ver su identificador, tipo, altura y coordenadas.
@@ -80,10 +105,14 @@ qué ver. Haz **clic en un vértice** para ver su identificador, tipo, altura y 
 | Líneas de terracota | Corredores del laberinto (GM). Se tiñen más rojos cuanto más peligrosos son. |
 | ▶ verde / ⚑ rojo | **Entrada** y **salida** del laberinto. |
 
+La franja **ocre** bajo los corredores es el **camino inicial de menor costo** de la entrada a la salida, calculado al cargar el
+escenario (por ejemplo, `M_ENTRADA → M_N1 → M_N2 → M_SALIDA`, 23 s en el escenario simple). Se puede mostrar u ocultar con el botón
+**Camino inicial** (Pygame) y su texto aparece también en el resumen de Inicio.
+
 Hay también un recuadro desplegable que explica qué es la componente conexa de la base (las posiciones a las que se
 puede llegar caminando desde la base: solo en ellas se pueden poner torres).
 
-## 5. Paso 3 — Calcular el plan de defensa
+## 6. Paso 3 — Calcular el plan de defensa
 
 En **Plan de defensa** pulsa **Calcular plan**. La aplicación ejecuta dos cosas:
 
@@ -98,6 +127,8 @@ Verás:
 - Los botones **Árbol T_E** y **Radios R_v** para mostrar u ocultar el árbol (en verde) y el radio de vigilancia de cada torre.
 - La **tabla de torres** con su puntuación, la **cobertura total** (porcentaje del laberinto vigilado) y la lista
   de posiciones inalcanzables (que no pueden ser torres).
+- La lista de **corredores vigilados** (cuántos son, qué longitud cubren y cuáles) y, en cada iteración del paso a paso, los corredores
+  que pasan a estar vigilados.
 - El **"Paso a paso de la selección voraz"**: las puntuaciones de cada candidata en cada ronda, para entender por qué ganó una.
 
 Una vez iniciado el combate, **las torres ya no se pueden cambiar**: si intentas recalcular el plan verás el mensaje
@@ -105,15 +136,15 @@ Una vez iniciado el combate, **las torres ya no se pueden cambiar**: si intentas
 
 Cuando estés conforme, pulsa **Ir a la simulación →**.
 
-## 6. Paso 4 — La simulación
+## 7. Paso 4 — La simulación
 
 La pantalla tiene el **mapa** a la izquierda y los **paneles** a la derecha (en el celular, los paneles quedan debajo del mapa).
 
-### 6.1 Controles del reloj
+### 7.1 Controles del reloj
 
 | Botón | Qué hace |
 |---|---|
-| **▶ Iniciar / ❚❚ Pausar** | Corre o detiene el tiempo. Al iniciar, el combate comienza y las torres quedan fijas. |
+| **Iniciar / Pausar** (en la web con ▶ y ❚❚; en Pygame también la tecla `Espacio`) | Corre o detiene el tiempo. Al iniciar, el combate comienza y las torres quedan fijas. |
 | **+1 s** | Avanza exactamente un segundo (solo con el reloj detenido). |
 | **1× / 2× / 5×** | Velocidad de la simulación. |
 | **↺ Reiniciar** | Empieza una partida nueva con el mismo plan (puentes reparados, presupuesto inicial). |
@@ -121,7 +152,7 @@ La pantalla tiene el **mapa** a la izquierda y los **paneles** a la derecha (en 
 El tiempo se mide en **segundos lógicos** (pasos de 0.25 s) y no depende de la velocidad de tu computador.
 Arriba aparecen el estado (Listo, En combate, Victoria o Derrota), el reloj (`12.0s / 300s`) y una barra de progreso hacia el límite de tiempo.
 
-### 6.2 Presupuesto y compra de soldados
+### 7.2 Presupuesto y compra de soldados
 
 El panel **Presupuesto** muestra el dinero **disponible**, el **reservado** (vuelos de helicóptero autorizados que aún no
 terminan) y el **gastado**. Pulsa uno de los tres botones para comprar:
@@ -138,7 +169,7 @@ destruida te da una **recompensa** (tanque $150, camión $100, robot $50).
 
 Los soldados en una torre alcanzan más lejos cuanto más alta es la torre: `alcance = base × (1 + β × altura)`.
 
-### 6.3 Mover soldados (panel "Soldados y transporte")
+### 7.3 Mover soldados (panel "Soldados y transporte")
 
 1. Haz clic en uno o más **chips de soldado** para seleccionarlos (`S1 INF · en base V_BASE`).
 2. Elige el **Destino** (una torre del plan o la base) y el **Medio**:
@@ -160,7 +191,7 @@ Los soldados en una torre alcanzan más lejos cuanto más alta es la torre: `alc
 - Los chips de soldados en camino, volando o reconstruyendo un puente están desactivados: no reciben órdenes.
 - Hay un número máximo de vuelos (se muestra como `helicópteros: n · $costo`).
 
-### 6.4 Puentes
+### 7.4 Puentes
 
 Cada puente muestra su resistencia en el mapa (`3/3`). Cuando llega a cero se **destruye**: aparece `✕` con una cuenta
 regresiva y nadie puede iniciar un cruce nuevo (los que ya estaban cruzando terminan). Después del tiempo de
@@ -172,20 +203,20 @@ reconstrucción, el puente recupera su resistencia y vuelve a funcionar.
   **✕ sin cuadrilla** y la obra espera.
 - Las **calles** (sin número) nunca se destruyen.
 
-### 6.5 El convoy y el peligro
+### 7.5 El convoy y el peligro
 
 El panel **Convoy enemigo** lista cada máquina con su vida. El convoy avanza como una sola formación y, en
 **cada intersección**, calcula un costo para cada corredor: `tiempo + α × daño esperado`. Elige el de menor costo, de modo
 que **rodea las zonas peligrosas** si hay un camino alternativo razonable. La tabla **"¿Por qué ese camino?"** muestra las
 opciones y el costo de cada una, y la tabla de corredores muestra su tiempo, su peligro y su peso.
 
-### 6.6 La bitácora
+### 7.6 La bitácora
 
 Registra cada hecho con su tiempo y su explicación: compras, salidas y llegadas de soldados, disparos y destrucciones,
 colapsos y reconstrucciones de puentes, vuelos, decisiones del convoy y el resultado final. Si algo ocurre en el
 mapa y no sabes por qué, búscalo allí.
 
-### 6.7 Fin de la partida
+### 7.7 Fin de la partida
 
 | Resultado | Cuándo ocurre |
 |---|---|
@@ -197,7 +228,7 @@ Si varias cosas ocurren en el mismo instante, se resuelven en ese orden: primero
 salida y por último el tiempo. Al terminar, el reloj se detiene y aparece un cartel con **Jugar de nuevo** y **Ver
 mapa** (para mirar el estado final).
 
-## 7. Una partida de ejemplo (escenario simple)
+## 8. Una partida de ejemplo (escenario simple)
 
 1. Inicio → carga `escenario_general_p_tardo.json`.
 2. Plan de defensa → **Calcular plan** (dos torres: `V_C1` y `V_C2`, 100 % de cobertura).
@@ -208,7 +239,7 @@ mapa** (para mirar el estado final).
 
 Si no compras nada, el convoy llega a la salida a los **23 s** y pierdes: la derrota también se puede probar.
 
-## 8. Mensajes frecuentes
+## 9. Mensajes frecuentes
 
 | Mensaje | Qué significa y qué hacer |
 |---|---|
@@ -224,11 +255,14 @@ Si no compras nada, el convoy llega a la salida a los **23 s** y pierdes: la der
 | "Algún soldado está ocupado…" | Ese soldado va en camino, vuela o reconstruye un puente. |
 | "No quedan usos de helicóptero" | Ya agotaste los vuelos permitidos. |
 
-## 9. Preguntas frecuentes
+## 10. Preguntas frecuentes
 
 - **¿Se guarda mi partida?** No. El estado vive en la memoria del servidor; si lo reinicias, vuelves a empezar vacío.
 - **¿Puedo reubicar una torre?** Solo recalculando el plan **antes** de iniciar el combate.
 - **¿Por qué mis soldados no disparan?** Revisa que estén **en una torre** (no en camino) y que el convoy esté a su alcance
   efectivo; la bitácora dice cuándo llegaron.
 - **¿Por qué el convoy cambió de camino?** Porque un corredor se volvió más peligroso; mira "¿Por qué ese camino?".
-- **¿Funciona en el celular?** Sí: con pantallas pequeñas los paneles se apilan debajo del mapa y la barra de secciones se desliza.
+- **¿Puedo usar Pygame y la web al mismo tiempo?** Sí. Comparten la partida: lo que hagas en una aparece en la otra en
+  menos de dos segundos. Avanza el reloj desde una sola de las dos: si lo inicias en ambas a la vez, las dos avanzan la misma partida y el tiempo correría el doble de rápido.
+- **¿Funciona en el celular?** Sí. La web se adapta a cualquier ancho (de 320 px a pantallas grandes): el texto, los espacios y los botones
+  crecen o se reducen de forma fluida, con paneles apilados debajo del mapa en pantallas pequeñas y botones de al menos 44 px en pantallas táctiles.

@@ -1,3 +1,6 @@
+> **Nota:** este es el plan original de reparto (Developer A y Developer B). La distribución vigente, con los nombres
+> de los integrantes, el cliente Pygame y los entregables, está en [`distribucion_tareas.md`](distribucion_tareas.md).
+
 # 👥 Project Division & Responsibilities (2 Developers)
 **Strategy:** Vertical Slicing — Both developers work on both Backend and Frontend.
 
