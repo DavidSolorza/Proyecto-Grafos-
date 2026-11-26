@@ -1,0 +1,60 @@
+{
+  "metadata": {
+    "title": "El Asedio Final de la Resistencia",
+    "D0": 45.0,
+    "alpha": 2.0,
+    "beta": 0.25,
+    "max_towers_K": 4,
+    "initial_budget": 2500,
+    "bridge_repair_time": 25.0
+  },
+  "graph_e": {
+    "vertices": [
+      { "id": "V_BASE", "coords": [10.0, 10.0], "type": "BASE", "z": 0.0 },
+      { "id": "V_C1", "coords": [25.0, 30.0], "type": "CANDIDATE", "z": 3.0 },
+      { "id": "V_C2", "coords": [55.0, 25.0], "type": "CANDIDATE", "z": 4.0 },
+      { "id": "V_C3", "coords": [75.0, 35.0], "type": "CANDIDATE", "z": 2.0 },
+      { "id": "V_T1", "coords": [40.0, 10.0], "type": "TRANSIT", "z": 1.0 },
+      { "id": "V_H1", "coords": [85.0, 15.0], "type": "HELIPORT", "z": 0.0 }
+    ],
+    "edges": [
+      { "id": "E1", "u": "V_BASE", "v": "V_T1", "time_walk": 10.0, "time_moto": 4.0, "bridge_max_hp": 8, "bridge_current_hp": 8 },
+      { "id": "E2", "u": "V_BASE", "v": "V_C1", "time_walk": 14.0, "time_moto": 6.0, "bridge_max_hp": 10, "bridge_current_hp": 10 },
+      { "id": "E3", "u": "V_C1", "v": "V_C2", "time_walk": 16.0, "time_moto": 7.0, "bridge_max_hp": 10, "bridge_current_hp": 10 },
+      { "id": "E4", "u": "V_T1", "v": "V_C2", "time_walk": 12.0, "time_moto": 5.0, "bridge_max_hp": 6, "bridge_current_hp": 6 },
+      { "id": "E5", "u": "V_C2", "v": "V_C3", "time_walk": 11.0, "time_moto": 5.0, "bridge_max_hp": 10, "bridge_current_hp": 10 },
+      { "id": "E6", "u": "V_C3", "v": "V_H1", "time_walk": 9.0, "time_moto": 4.0, "bridge_max_hp": 10, "bridge_current_hp": 10 }
+    ]
+  },
+  "graph_m": {
+    "vertices": [
+      { "id": "M_ENTRADA", "coords": [0.0, 20.0], "is_entry": true, "is_exit": false },
+      { "id": "M_A1", "coords": [30.0, 40.0], "is_entry": false, "is_exit": false },
+      { "id": "M_B1", "coords": [30.0, 5.0], "is_entry": false, "is_exit": false },
+      { "id": "M_N2", "coords": [60.0, 20.0], "is_entry": false, "is_exit": false },
+      { "id": "M_SALIDA", "coords": [95.0, 20.0], "is_entry": false, "is_exit": true }
+    ],
+    "edges": [
+      { "id": "M_C1", "u": "M_ENTRADA", "v": "M_A1", "length": 35.0, "speed_allowed": 5.0 },
+      { "id": "M_C2", "u": "M_ENTRADA", "v": "M_B1", "length": 30.0, "speed_allowed": 5.0 },
+      { "id": "M_C3", "u": "M_A1", "v": "M_N2", "length": 35.0, "speed_allowed": 5.0 },
+      { "id": "M_C4", "u": "M_B1", "v": "M_N2", "length": 32.0, "speed_allowed": 5.0 },
+      { "id": "M_C5", "u": "M_N2", "v": "M_SALIDA", "length": 35.0, "speed_allowed": 5.0 }
+    ]
+  },
+  "candidates_meta": [
+    { "vertex_id": "V_C1", "rv": 28.0 },
+    { "vertex_id": "V_C2", "rv": 32.0 },
+    { "vertex_id": "V_C3", "rv": 26.0 }
+  ],
+  "convoy": {
+    "tanks": 2,
+    "trucks": 2,
+    "robot_soldiers": 3
+  },
+  "defenders_config": {
+    "infantry": { "cost": 100, "damage": 10, "base_range": 5.0, "frequency": 1.0 },
+    "sniper": { "cost": 300, "damage": 50, "base_range": 20.0, "frequency": 0.5 },
+    "gunner": { "cost": 500, "damage": 100, "base_range": 15.0, "frequency": 0.2 }
+  }
+}

@@ -1,0 +1,382 @@
+{
+  "metadata": {
+    "title": "Escenario complejo: la tenaza del laberinto",
+    "D0": 40.0,
+    "alpha": 2.0,
+    "beta": 0.15,
+    "max_towers_K": 3,
+    "initial_budget": 3000,
+    "bridge_repair_time": 25.0,
+    "time_limit": 300.0
+  },
+  "graph_e": {
+    "vertices": [
+      {
+        "id": "V_BASE",
+        "coords": [
+          10,
+          50
+        ],
+        "type": "BASE",
+        "z": 0
+      },
+      {
+        "id": "V_T1",
+        "coords": [
+          30,
+          70
+        ],
+        "type": "TRANSIT",
+        "z": 1
+      },
+      {
+        "id": "V_T2",
+        "coords": [
+          30,
+          30
+        ],
+        "type": "TRANSIT",
+        "z": 1
+      },
+      {
+        "id": "V_C1",
+        "coords": [
+          55,
+          75
+        ],
+        "type": "CANDIDATE",
+        "z": 3
+      },
+      {
+        "id": "V_C2",
+        "coords": [
+          55,
+          25
+        ],
+        "type": "CANDIDATE",
+        "z": 4
+      },
+      {
+        "id": "V_C3",
+        "coords": [
+          80,
+          50
+        ],
+        "type": "CANDIDATE",
+        "z": 6
+      },
+      {
+        "id": "V_C4",
+        "coords": [
+          45,
+          50
+        ],
+        "type": "CANDIDATE",
+        "z": 2
+      },
+      {
+        "id": "V_H1",
+        "coords": [
+          100,
+          50
+        ],
+        "type": "HELIPORT",
+        "z": 0
+      },
+      {
+        "id": "V_ISLA",
+        "coords": [
+          120,
+          90
+        ],
+        "type": "CANDIDATE",
+        "z": 5
+      }
+    ],
+    "edges": [
+      {
+        "id": "E01",
+        "u": "V_BASE",
+        "v": "V_T1",
+        "time_walk": 14,
+        "time_moto": 5,
+        "bridge_max_hp": 6,
+        "bridge_current_hp": 6
+      },
+      {
+        "id": "E02",
+        "u": "V_BASE",
+        "v": "V_T2",
+        "time_walk": 14,
+        "time_moto": 5,
+        "bridge_max_hp": 6,
+        "bridge_current_hp": 6
+      },
+      {
+        "id": "E03",
+        "u": "V_BASE",
+        "v": "V_C4",
+        "time_walk": 20,
+        "time_moto": 8,
+        "bridge_max_hp": 4,
+        "bridge_current_hp": 4
+      },
+      {
+        "id": "E04",
+        "u": "V_T1",
+        "v": "V_C1",
+        "time_walk": 12,
+        "time_moto": 4,
+        "bridge_max_hp": 8,
+        "bridge_current_hp": 8
+      },
+      {
+        "id": "E05",
+        "u": "V_T2",
+        "v": "V_C2",
+        "time_walk": 12,
+        "time_moto": 4,
+        "bridge_max_hp": 8,
+        "bridge_current_hp": 8
+      },
+      {
+        "id": "E06",
+        "u": "V_C1",
+        "v": "V_C4",
+        "time_walk": 12,
+        "time_moto": 4,
+        "bridge_max_hp": 3,
+        "bridge_current_hp": 3
+      },
+      {
+        "id": "E07",
+        "u": "V_C2",
+        "v": "V_C4",
+        "time_walk": 12,
+        "time_moto": 4,
+        "bridge_max_hp": 5,
+        "bridge_current_hp": 5
+      },
+      {
+        "id": "E08",
+        "u": "V_C4",
+        "v": "V_C3",
+        "time_walk": 15,
+        "time_moto": 6,
+        "bridge_max_hp": 5,
+        "bridge_current_hp": 5
+      },
+      {
+        "id": "E09",
+        "u": "V_C3",
+        "v": "V_H1",
+        "time_walk": 8,
+        "time_moto": 3,
+        "bridge_max_hp": 4,
+        "bridge_current_hp": 4
+      },
+      {
+        "id": "E10",
+        "u": "V_C1",
+        "v": "V_C3",
+        "time_walk": 22,
+        "time_moto": 8,
+        "bridge_max_hp": 6,
+        "bridge_current_hp": 6
+      },
+      {
+        "id": "E11",
+        "u": "V_C2",
+        "v": "V_C3",
+        "time_walk": 22,
+        "time_moto": 8,
+        "bridge_max_hp": 6,
+        "bridge_current_hp": 6
+      }
+    ]
+  },
+  "graph_m": {
+    "vertices": [
+      {
+        "id": "M_ENTRADA",
+        "coords": [
+          0,
+          50
+        ],
+        "is_entry": true,
+        "is_exit": false
+      },
+      {
+        "id": "M_A",
+        "coords": [
+          30,
+          60
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_B",
+        "coords": [
+          30,
+          40
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_C",
+        "coords": [
+          60,
+          60
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_D",
+        "coords": [
+          60,
+          40
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_E",
+        "coords": [
+          75,
+          50
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_SALIDA",
+        "coords": [
+          110,
+          50
+        ],
+        "is_entry": false,
+        "is_exit": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "MC1",
+        "u": "M_ENTRADA",
+        "v": "M_A",
+        "length": 35,
+        "speed_allowed": 2.5
+      },
+      {
+        "id": "MC2",
+        "u": "M_ENTRADA",
+        "v": "M_B",
+        "length": 35,
+        "speed_allowed": 2.5
+      },
+      {
+        "id": "MC3",
+        "u": "M_A",
+        "v": "M_C",
+        "length": 30,
+        "speed_allowed": 2.0
+      },
+      {
+        "id": "MC4",
+        "u": "M_B",
+        "v": "M_D",
+        "length": 30,
+        "speed_allowed": 3.0
+      },
+      {
+        "id": "MC5",
+        "u": "M_A",
+        "v": "M_B",
+        "length": 20,
+        "speed_allowed": 2.5
+      },
+      {
+        "id": "MC6",
+        "u": "M_C",
+        "v": "M_E",
+        "length": 22,
+        "speed_allowed": 2.5
+      },
+      {
+        "id": "MC7",
+        "u": "M_D",
+        "v": "M_E",
+        "length": 22,
+        "speed_allowed": 2.0
+      },
+      {
+        "id": "MC8",
+        "u": "M_C",
+        "v": "M_D",
+        "length": 20,
+        "speed_allowed": 2.5
+      },
+      {
+        "id": "MC9",
+        "u": "M_E",
+        "v": "M_SALIDA",
+        "length": 38,
+        "speed_allowed": 3.0
+      }
+    ]
+  },
+  "candidates_meta": [
+    {
+      "vertex_id": "V_C1",
+      "rv": 30.0
+    },
+    {
+      "vertex_id": "V_C2",
+      "rv": 30.0
+    },
+    {
+      "vertex_id": "V_C3",
+      "rv": 35.0
+    },
+    {
+      "vertex_id": "V_C4",
+      "rv": 28.0
+    },
+    {
+      "vertex_id": "V_ISLA",
+      "rv": 40.0
+    }
+  ],
+  "convoy": {
+    "tanks": 2,
+    "trucks": 2,
+    "robot_soldiers": 4
+  },
+  "defenders_config": {
+    "infantry": {
+      "cost": 100,
+      "damage": 10,
+      "base_range": 5.0,
+      "frequency": 1.0
+    },
+    "sniper": {
+      "cost": 300,
+      "damage": 50,
+      "base_range": 20.0,
+      "frequency": 0.5
+    },
+    "gunner": {
+      "cost": 500,
+      "damage": 100,
+      "base_range": 15.0,
+      "frequency": 0.2
+    }
+  },
+  "helicopter": {
+    "speed": 20.0,
+    "cost": 250,
+    "max_uses": 2
+  }
+}

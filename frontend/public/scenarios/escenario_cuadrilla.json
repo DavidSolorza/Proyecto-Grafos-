@@ -1,0 +1,193 @@
+{
+  "metadata": {
+    "title": "Escenario de prueba: cuadrilla de reconstrucción, calles y medios no permitidos",
+    "D0": 50.0,
+    "alpha": 1.5,
+    "beta": 0.2,
+    "max_towers_K": 3,
+    "initial_budget": 2000,
+    "bridge_repair_time": 30.0,
+    "bridge_repair_crew": 2
+  },
+  "graph_e": {
+    "vertices": [
+      {
+        "id": "V_BASE",
+        "coords": [
+          10.0,
+          10.0
+        ],
+        "type": "BASE",
+        "z": 0.0
+      },
+      {
+        "id": "V_C1",
+        "coords": [
+          30.0,
+          20.0
+        ],
+        "type": "CANDIDATE",
+        "z": 2.0
+      },
+      {
+        "id": "V_C2",
+        "coords": [
+          50.0,
+          10.0
+        ],
+        "type": "CANDIDATE",
+        "z": 5.0
+      },
+      {
+        "id": "V_T1",
+        "coords": [
+          30.0,
+          40.0
+        ],
+        "type": "TRANSIT",
+        "z": 1.0
+      },
+      {
+        "id": "V_H1",
+        "coords": [
+          70.0,
+          20.0
+        ],
+        "type": "HELIPORT",
+        "z": 0.0
+      }
+    ],
+    "edges": [
+      {
+        "id": "E_E1",
+        "u": "V_BASE",
+        "v": "V_T1",
+        "time_walk": 12.0,
+        "time_moto": 5.0,
+        "bridge_max_hp": 3,
+        "bridge_current_hp": 3
+      },
+      {
+        "id": "E_E2",
+        "u": "V_T1",
+        "v": "V_C1",
+        "time_walk": 8.0,
+        "time_moto": 3.0,
+        "bridge_max_hp": 1,
+        "bridge_current_hp": 1
+      },
+      {
+        "id": "E_E3",
+        "u": "V_C1",
+        "v": "V_C2",
+        "time_walk": 15.0,
+        "time_moto": 6.0
+      },
+      {
+        "id": "E_E4",
+        "u": "V_C2",
+        "v": "V_H1",
+        "time_walk": null,
+        "time_moto": 4.0
+      }
+    ]
+  },
+  "graph_m": {
+    "vertices": [
+      {
+        "id": "M_ENTRADA",
+        "coords": [
+          0.0,
+          0.0
+        ],
+        "is_entry": true,
+        "is_exit": false
+      },
+      {
+        "id": "M_N1",
+        "coords": [
+          30.0,
+          15.0
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_N2",
+        "coords": [
+          60.0,
+          15.0
+        ],
+        "is_entry": false,
+        "is_exit": false
+      },
+      {
+        "id": "M_SALIDA",
+        "coords": [
+          90.0,
+          0.0
+        ],
+        "is_entry": false,
+        "is_exit": true
+      }
+    ],
+    "edges": [
+      {
+        "id": "M_C1",
+        "u": "M_ENTRADA",
+        "v": "M_N1",
+        "length": 40.0,
+        "speed_allowed": 1.5
+      },
+      {
+        "id": "M_C2",
+        "u": "M_N1",
+        "v": "M_N2",
+        "length": 35.0,
+        "speed_allowed": 1.5
+      },
+      {
+        "id": "M_C3",
+        "u": "M_N2",
+        "v": "M_SALIDA",
+        "length": 40.0,
+        "speed_allowed": 1.5
+      }
+    ]
+  },
+  "candidates_meta": [
+    {
+      "vertex_id": "V_C1",
+      "rv": 25.0
+    },
+    {
+      "vertex_id": "V_C2",
+      "rv": 30.0
+    }
+  ],
+  "convoy": {
+    "tanks": 1,
+    "trucks": 1,
+    "robot_soldiers": 2
+  },
+  "defenders_config": {
+    "infantry": {
+      "cost": 100,
+      "damage": 10,
+      "base_range": 5.0,
+      "frequency": 1.0
+    },
+    "sniper": {
+      "cost": 300,
+      "damage": 50,
+      "base_range": 20.0,
+      "frequency": 0.5
+    },
+    "gunner": {
+      "cost": 500,
+      "damage": 100,
+      "base_range": 15.0,
+      "frequency": 0.2
+    }
+  }
+}
