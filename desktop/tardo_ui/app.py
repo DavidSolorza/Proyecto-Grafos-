@@ -38,6 +38,12 @@ class App:
         return self.canvas
 
     def open_picker(self) -> None:
+        from tardo_ui.filepicker import choose_native
+        chosen = choose_native(self.last_dir)
+        if chosen:
+            self.last_dir = chosen.parent
+            self.store.load_file(chosen)
+            return
         self.picker = FilePicker(self.last_dir)
         self.ui.click = None                                    # this click opened the dialog: it must not also pick a row
 

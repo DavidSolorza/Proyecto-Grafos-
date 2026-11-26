@@ -21,8 +21,23 @@ def list_dir(folder: Path) -> list[tuple[str, bool]]:
                   key=lambda i: (not i[1], i[0].lower()))
 
 
-def drives() -> list[Path]:
-    return [Path(f"{c}:/") for c in string.ascii_uppercase if os.path.exists(f"{c}:/")] if os.name == "nt" else []
+def choose_native(start=None):
+    """Native OS file dialog using tkinter (fallback to None if unavailable)."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        path = filedialog.askopenfilename(
+            initialdir=str(start or Path.cwd()),
+            title="Seleccionar escenario JSON",
+            filetypes=[("Archivos JSON", "*.json"), ("Todos los archivos", "*.*")]
+        )
+        root.destroy()
+        return Path(path) if path else None
+    except Exception:
+        return None
 
 
 class FilePicker:

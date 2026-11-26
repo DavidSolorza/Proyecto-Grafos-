@@ -85,6 +85,12 @@ def draw_vertices_e(ui, vp, scenario, sim, tower_ids, selected) -> None:
         if tower and v["id"] in occupancy:
             tw = occupancy[v["id"]]
             ui.text(f"{tw['occupants'] + tw['reserved']}/{tw['capacity']}", (x, y - 15), "bold", t.GOLD, "midbottom")
+            # 3 slot indicators below the tower label
+            for s_idx in range(tw.get("capacity", 3)):
+                sx = x - 12 + s_idx * 12
+                c_fill = t.LEAF if s_idx < tw["occupants"] else t.GOLD if s_idx < (tw["occupants"] + tw["reserved"]) else (80, 72, 60)
+                pygame.draw.circle(ui.surface, c_fill, (sx, y + 30), 4)
+                pygame.draw.circle(ui.surface, t.INK, (sx, y + 30), 4, 1)
 
 
 def draw_vertices_m(ui, vp, scenario, selected) -> None:
