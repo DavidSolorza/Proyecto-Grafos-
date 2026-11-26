@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from '../api/client';
-import { eventBus, EVENTS } from '../services/eventBus';
 
 const FINISHED = ['VICTORY_ELIMINATION', 'VICTORY_RESISTANCE', 'DEFEAT'];
-const FRAME_MS = 250;
+const FRAME_MS = 250; // real time between ticks; each tick advances 0.25s * speed
 
-/** Holds simulation state and coordinates high-performance updates via EventBus. */
+/** Holds the simulation snapshot and every action the user can trigger on it. */
 export default function useSimulation() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
@@ -13,12 +12,12 @@ export default function useSimulation() {
   const [speed, setSpeed] = useState(1);
   const busy = useRef(false);
 
+  // Runs an API call and stores the new snapshot (or the error message)
   const run = useCallback(async (call, ...args) => {
     try {
       const res = await call(...args);
       setState(res.state);
       setError(null);
-      eventBus.emit(EVENTS.SIM_TICK, res.state);
       return res.state;
     } catch (err) {
       setError(err.message);
@@ -27,9 +26,10 @@ export default function useSimulation() {
   }, []);
 
   useEffect(() => {
-    api.fetchState().then((r) => {
-      setState(r.state);
-      eventBus.emit(EVENTS.SIM_TICK, r.state);
+    api.fetchStatus().then((s) => {
+      if (s.match) {
+        api.fetchState().then((r) => setState(r.state)).catch(() => {});
+      }
     }).catch(() => {});
   }, []);
 
@@ -49,7 +49,6 @@ export default function useSimulation() {
     try {
       const r = await api.fetchState();
       setState(r.state);
-      eventBus.emit(EVENTS.SIM_TICK, r.state);
       if (FINISHED.includes(r.state.status)) setRunning(false);
     } catch {
       setState(null);

@@ -10,7 +10,7 @@ const POLL_MS = 1500;
  */
 export default function useSync(reloadWorld, sim) {
   const last = useRef(null);
-  const { running, refresh } = sim;
+  const { running, refresh, clear } = sim;
 
   useEffect(() => {
     let alive = true;
@@ -21,13 +21,19 @@ export default function useSync(reloadWorld, sim) {
         const fingerprint = JSON.stringify([status.revision, status.match]);
         if (!alive || fingerprint === last.current) return;
         last.current = fingerprint;
-        // The first fingerprint also reloads: a client may have changed the session after this page first loaded
         await reloadWorld(true);
-        await refresh();
+        if (status.match) {
+          await refresh();
+        } else {
+          clear();
+        }
       } catch {
-        last.current = null; // backend unreachable: compare from scratch when it is back
+        last.current = null;
       }
     }, POLL_MS);
-    return () => { alive = false; clearInterval(id); };
-  }, [running, refresh, reloadWorld]);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [running, refresh, clear, reloadWorld]);
 }
