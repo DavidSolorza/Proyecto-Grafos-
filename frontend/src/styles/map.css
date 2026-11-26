@@ -1,36 +1,53 @@
-/* Dark "stage" where the graphs are drawn. SVG text and shapes scale with the viewBox, so the map is fluid too. */
-.stage { position: relative; border-radius: var(--radius); padding: clamp(6px, 1vw, 14px); overflow: hidden;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(184, 137, 59, 0.12), transparent 60%),
-    radial-gradient(rgba(216, 200, 166, 0.09) 1px, transparent 1.4px) 0 0 / clamp(18px, 2.4vw, 28px) clamp(18px, 2.4vw, 28px),
-    linear-gradient(160deg, var(--ink-2), var(--ink));
-  border: 1px solid rgba(216, 200, 166, 0.18); box-shadow: var(--shadow-lift); }
+/* Light tactical battlefield canvas */
+.stage { position: relative; border-radius: var(--radius); padding: clamp(6px, 1vw, 12px); overflow: hidden;
+  background: radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.05), transparent 70%), #f8fafc;
+  border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); }
 .stage svg { display: block; width: 100%; height: auto; max-height: min(72vh, 46rem); }
 
-.map-label { fill: #e8dcc4; font-family: var(--font-mono); pointer-events: none; }
-.map-label.dim { fill: rgba(232, 220, 196, 0.5); }
-.map-label.rust { fill: #e8a58c; }
-.map-label.gold { fill: #d9a441; font-weight: 700; }
-.map-node { cursor: pointer; outline: none; }
-.map-node:hover circle, .map-node:hover polygon, .map-node:hover rect { filter: brightness(1.25) drop-shadow(0 0 3px rgba(217, 164, 65, 0.6)); }
-.map-node:focus-visible circle, .map-node:focus-visible polygon, .map-node:focus-visible rect { filter: drop-shadow(0 0 4px #f0e7d6); }
+.map-label { fill: #1e293b; font-family: var(--font-mono); pointer-events: none; }
+.map-label.dim { fill: #64748b; font-weight: 500; }
+.map-node { cursor: pointer; outline: none; transition: transform 0.15s ease; }
+.map-node:hover { filter: brightness(1.15) drop-shadow(0 2px 6px rgba(37, 99, 235, 0.35)); }
 
 .pulse { transform-box: fill-box; transform-origin: center; animation: pulse 1.6s ease-in-out infinite; }
-@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.35); opacity: 0.3; } }
+@keyframes pulse { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.35); opacity: 0.3; } }
 
-.legend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); padding: var(--sp-3) var(--sp-1) 0; font-size: var(--fs-xs); color: var(--ink-soft); }
+.legend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); padding: var(--sp-3) var(--sp-1) 0; font-size: var(--fs-xs); color: #475569; }
 .legend span { display: inline-flex; align-items: center; }
-.legend i { display: inline-block; width: 0.8em; aspect-ratio: 1; margin-right: 0.5em; border: 1px solid var(--line-strong); }
-.toolbar { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.legend i { display: inline-block; width: 0.85em; aspect-ratio: 1; margin-right: 0.5em; border-radius: 2px; }
 
-.node-info { margin-top: var(--sp-3); display: flex; justify-content: space-between; gap: var(--sp-3); align-items: center; flex-wrap: wrap; }
-.node-info .mono { color: var(--ink-soft); overflow-wrap: anywhere; }
-p.node-info { display: block; font-size: var(--fs-sm); }
+/* Minimalist Translucent Top HUD Bar */
+.map-hud-bar { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between;
+  align-items: center; pointer-events: none; z-index: 10; gap: 8px; }
+.hud-group { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(8px); border: 1px solid rgba(203, 213, 225, 0.9); border-radius: 9999px; padding: 3px 8px; pointer-events: auto; }
+.hud-tag { display: flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 700; color: #1e293b; }
+.hud-tag.cash { color: #15803d; }
+.hud-tag.time { color: #2563eb; }
+.hud-tag.enemy { color: #dc2626; }
+.hud-tag.win { color: #16a34a; }
+.hud-btn-mini { display: inline-flex; align-items: center; gap: 3px; background: transparent; border: 1px solid transparent;
+  cursor: pointer; padding: 2px 7px; border-radius: 9999px; font-size: var(--fs-xs); font-weight: 600; color: #64748b; }
+.hud-btn-mini:hover { background: #f1f5f9; color: #1e293b; }
+.hud-btn-mini.on { background: #2563eb; color: #ffffff; border-color: #1d4ed8; }
 
-/* Banner over the stage when the match ends */
+/* Interactive Map Popover */
+.node-popover-card { position: absolute; bottom: var(--sp-3); left: var(--sp-3); width: min(320px, calc(100% - 24px));
+  background: #ffffff; border: 1px solid #94a3b8; border-radius: var(--radius); padding: var(--sp-3);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1); z-index: 20; }
+.node-popover-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--sp-2); }
+.node-popover-badge { font-size: var(--fs-xs); font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.node-popover-badge.ge { background: #dbeafe; color: #1d4ed8; }
+.node-popover-badge.gm { background: #fee2e2; color: #b91c1c; }
+.popover-close-btn { background: transparent; border: none; font-size: var(--fs-base); cursor: pointer; color: #64748b; }
+.popover-quick-recruit { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: var(--sp-2); }
+.quick-btn { font-size: var(--fs-xs); padding: 4px 2px; border: 1px solid #cbd5e1; border-radius: 4px; background: #f8fafc; cursor: pointer; }
+.quick-btn:hover:not(:disabled) { background: #2563eb; color: #ffffff; }
+
+/* Banner over stage when match ends */
 .end-banner { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: var(--sp-2);
-  padding: var(--sp-4); color: var(--paper); background: rgba(20, 17, 14, 0.84); backdrop-filter: blur(4px); animation: rise 0.4s var(--ease) both; }
+  padding: var(--sp-4); color: #0f172a; background: rgba(255, 255, 255, 0.94); backdrop-filter: blur(6px); z-index: 30; }
 .end-banner h2 { font-size: var(--fs-xl); }
-.end-banner p { color: var(--sand); max-width: 40ch; margin-inline: auto; }
-.end-banner.win h2 { color: #a8cf94; }
-.end-banner.lose h2 { color: #ef8d74; }
+.end-banner p { color: #334155; max-width: 42ch; margin-inline: auto; }
+.end-banner.win h2 { color: #15803d; }
+.end-banner.lose h2 { color: #dc2626; }

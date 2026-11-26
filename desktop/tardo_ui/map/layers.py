@@ -96,4 +96,9 @@ def draw_vertices_m(ui, vp, scenario, selected) -> None:
         pygame.draw.polygon(ui.surface, color, [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)])
         pygame.draw.polygon(ui.surface, t.INK, [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 1)
         tag = "ENTRADA " if v["is_entry"] else "SALIDA " if v["is_exit"] else ""
-        ui.text(f"{tag}{v['id']}", (x, y - 12), "map", t.RUST, "midbottom")
+        label = f"{tag}{v['id']}"
+        lw, lh = ui.fonts.get("map").size(label)
+        bg_rect = pygame.Rect(x - lw // 2 - 4, y - 24, lw + 8, lh + 2)
+        pygame.draw.rect(ui.surface, (20, 17, 14), bg_rect, border_radius=4)
+        pygame.draw.rect(ui.surface, color, bg_rect, 1, border_radius=4)
+        ui.text(label, (x, y - 12), "map", color, "midbottom")

@@ -5,7 +5,8 @@ export function computeView(graphE, graphM, extra = 0) {
   if (points.length === 0) return { minX: 0, minY: 0, w: 100, h: 60, u: 1 };
   const xs = points.map((p) => p[0]);
   const ys = points.map((p) => p[1]);
-  const pad = Math.max(...xs, ...ys) * 0.12 + 6 + extra;
+  // Increased padding (0.18 + 12) so labels and peripheral nodes (like M_SALIDA) never touch edges
+  const pad = Math.max(...xs, ...ys) * 0.18 + 12 + extra;
   const minX = Math.min(...xs) - pad;
   const minY = Math.min(...ys) - pad;
   const w = Math.max(...xs) - Math.min(...xs) + pad * 2;

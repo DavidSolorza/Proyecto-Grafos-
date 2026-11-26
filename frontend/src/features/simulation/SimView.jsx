@@ -58,7 +58,8 @@ export default function SimView({ scenario, plan, ctrl, onNavigate }) {
       <div className="grid-2">
         <div className="stack sticky-col">
           <GraphMap graphE={scenario.graph_e} graphM={scenario.graph_m} plan={plan} sim={sim}
-            layers={{ ge: true, gm: true, tree: false, radii: false }} selected={selected} onSelect={setSelected}>
+            layers={{ ge: true, gm: true, tree: false, radii: false }} selected={selected}
+            onSelect={setSelected} onRecruit={ctrl.recruit}>
             {end && !hideEnd && (
               <div className={`end-banner ${end[0]}`} role="status">
                 <h2>{end[1]}</h2><p>{sim.end_reason}</p>

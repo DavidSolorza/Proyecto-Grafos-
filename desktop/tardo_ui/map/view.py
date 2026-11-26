@@ -11,7 +11,7 @@ class Viewport:
         self.rect = pygame.Rect(rect)
         pts = [v["coords"] for g in ("graph_e", "graph_m") for v in scenario[g]["vertices"]] or [[0, 0], [100, 60]]
         xs, ys = [p[0] for p in pts], [p[1] for p in pts]
-        pad = max(max(xs), max(ys)) * 0.12 + 6          # same margin rule as the web map
+        pad = max(max(xs), max(ys)) * 0.16 + 10          # expanded margin so peripheral nodes never stick to edges
         self.min_x, self.min_y = min(xs) - pad, min(ys) - pad
         w, h = max(xs) - min(xs) + 2 * pad, max(ys) - min(ys) + 2 * pad
         self.scale = min(self.rect.w / w, self.rect.h / h)
