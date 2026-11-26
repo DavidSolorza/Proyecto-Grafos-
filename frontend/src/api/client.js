@@ -1,20 +1,40 @@
 /**
- * REST client for the Flask backend. Every function returns parsed JSON
- * or throws an Error with a message that is safe to show to the user.
- * In development Vite proxies /api to http://127.0.0.1:5000 (see vite.config.js).
+ * REST client for the Flask backend with HTTP status diagnostics & EventBus logs.
  */
+import { eventBus, EVENTS } from '../services/eventBus';
+
 const API = import.meta.env.VITE_API_URL ?? '/api';
 
+const HTTP_ERRORS = {
+  400: 'Solicitud inválida',
+  401: 'No autorizado',
+  403: 'Acceso denegado',
+  404: 'Recurso no encontrado',
+  409: 'Conflicto en el estado del escenario/simulación',
+  500: 'Error interno del servidor Flask',
+};
+
 async function request(path, options = {}) {
+  const method = options.method || 'GET';
+  const start = performance.now();
   let res;
   try {
     res = await fetch(`${API}${path}`, options);
-  } catch {
+  } catch (err) {
+    const duration = Math.round(performance.now() - start);
+    eventBus.emit(EVENTS.HTTP_LOG, { method, path, status: 0, error: err.message, duration });
     throw new Error('No se pudo conectar con el backend. ¿Está corriendo en el puerto 5000?');
   }
+
+  const duration = Math.round(performance.now() - start);
   const data = await res.json().catch(() => ({}));
+  eventBus.emit(EVENTS.HTTP_LOG, { method, path, status: res.status, success: res.ok, duration });
+
   if (!res.ok || data.success === false) {
-    throw new Error(data.error || `Error del servidor (${res.status})`);
+    const desc = HTTP_ERRORS[res.status] || `Error HTTP ${res.status}`;
+    const msg = data.error ? `${data.error}` : `${desc}`;
+    eventBus.emit(EVENTS.TOAST, { type: 'error', message: `[${res.status}] ${msg}` });
+    throw new Error(msg);
   }
   return data;
 }
@@ -30,7 +50,6 @@ export const fetchHealth = () =>
   request('/health').catch((e) => ({ status: 'disconnected', error: e.message }));
 
 export const fetchCurrentScenario = () => request('/scenario/current');
-// Cheap fingerprint of the shared session: lets this app follow changes made by the Pygame client
 export const fetchStatus = () => request('/scenario/status');
 
 export const uploadScenarioFile = (file) => {
@@ -39,16 +58,13 @@ export const uploadScenarioFile = (file) => {
   return request('/scenario/upload', { method: 'POST', body: form });
 };
 
-// Defense plan (MST + towers)
 export const fetchPlan = () => request('/defense/plan');
 export const createPlan = () => post('/defense/plan');
 
-// Simulation
 export const fetchState = () => request('/simulation/state');
 export const resetSimulation = () => post('/simulation/reset');
 export const tickSimulation = (dt) => post('/simulation/tick', { dt });
 
-// Units and transport
 export const recruitSoldiers = (type, count = 1) => post('/units/recruit', { type, count });
 export const moveSoldiers = (soldier_ids, dest, mode) =>
   post('/transport/move', { soldier_ids, dest, mode });

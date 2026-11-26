@@ -585,3 +585,12 @@ rejilla de puntos y resplandor cálido, halo sobre las torres elegidas y un anil
 
 Pruebas: `desktop/tests/test_ui_fluid.py` (16 pruebas) comprueba el recorte de la escala, su crecimiento sin saltos, que cada pantalla llene la ventana
 en cinco tamaños, la conversión de clics, la reconstrucción del lienzo solo cuando cambia el tamaño y los efectos visuales.
+
+### 13.3 Servicio de Bus de Eventos (`eventBus.js`) y Diagnóstico de Red HTTP
+
+Para evitar caídas de rendimiento durante simulaciones rápidas o en ráfagas de ticks, el cliente React incorpora un **Bus de Eventos desacoplado**:
+
+- **Arquitectura Pub/Sub (`eventBus.js`):** El motor y los hooks emiten eventos específicos (`sim:tick`, `sim:combat`, `sim:bridge`, `ui:toast`, `http:log`). Los componentes se suscriben únicamente a los canales que requieren, evitando repintados innecesarios en cascada.
+- **Throttling de Ticks (`emitThrottled`):** Agrupa actualizaciones de alta frecuencia para mantener 60 FPS estables en el hilo principal del navegador.
+- **Diagnóstico y Códigos de Estado HTTP:** El cliente REST (`client.js`) intercepta cada petición y mide su latencia en milisegundos. Tipifica las respuestas estándar (200 OK, 400 Bad Request, 401 Unauthorized, 403 Forbidden, 404 Not Found, 409 Conflict, 500 Internal Error) y emite notificaciones accesibles en pantalla (`ToastContainer.jsx`) y un historial de red inspeccionable (`HttpLogDrawer.jsx`).
+

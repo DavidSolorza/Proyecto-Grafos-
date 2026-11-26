@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as api from '../api/client';
+import { eventBus, EVENTS } from '../services/eventBus';
 
 const FINISHED = ['VICTORY_ELIMINATION', 'VICTORY_RESISTANCE', 'DEFEAT'];
-const FRAME_MS = 250; // real time between ticks; each tick advances 0.25s * speed
+const FRAME_MS = 250;
 
-/** Holds the simulation snapshot and every action the user can trigger on it. */
+/** Holds simulation state and coordinates high-performance updates via EventBus. */
 export default function useSimulation() {
   const [state, setState] = useState(null);
   const [error, setError] = useState(null);
@@ -12,12 +13,12 @@ export default function useSimulation() {
   const [speed, setSpeed] = useState(1);
   const busy = useRef(false);
 
-  // Runs an API call and stores the new snapshot (or the error message)
   const run = useCallback(async (call, ...args) => {
     try {
       const res = await call(...args);
       setState(res.state);
       setError(null);
+      eventBus.emit(EVENTS.SIM_TICK, res.state);
       return res.state;
     } catch (err) {
       setError(err.message);
@@ -26,13 +27,16 @@ export default function useSimulation() {
   }, []);
 
   useEffect(() => {
-    api.fetchState().then((r) => setState(r.state)).catch(() => {}); // no match yet is fine
+    api.fetchState().then((r) => {
+      setState(r.state);
+      eventBus.emit(EVENTS.SIM_TICK, r.state);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!running) return undefined;
     const id = setInterval(async () => {
-      if (busy.current) return; // do not queue ticks if the server is slow
+      if (busy.current) return;
       busy.current = true;
       const next = await run(api.tickSimulation, 0.25 * speed);
       busy.current = false;
@@ -41,11 +45,11 @@ export default function useSimulation() {
     return () => clearInterval(id);
   }, [running, speed, run]);
 
-  // Re-read the match (used when another client, like the Pygame app, changed it)
   const refresh = useCallback(async () => {
     try {
       const r = await api.fetchState();
       setState(r.state);
+      eventBus.emit(EVENTS.SIM_TICK, r.state);
       if (FINISHED.includes(r.state.status)) setRunning(false);
     } catch {
       setState(null);

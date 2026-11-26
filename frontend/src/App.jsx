@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Header from './components/Header';
 import NoScenario from './components/NoScenario';
+import ToastContainer from './components/ToastContainer';
+import HttpLogDrawer from './components/HttpLogDrawer';
 import IntroView from './features/intro/IntroView';
 import GraphsView from './features/graphs/GraphsView';
 import PlanView from './features/plan/PlanView';
@@ -45,6 +47,8 @@ export default function App() {
           <SimView scenario={world.scenario} plan={world.plan} ctrl={sim} onNavigate={setTab} />
         )}
       </main>
+      <ToastContainer />
+      <HttpLogDrawer />
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import { ShieldAlert, Heart, HelpCircle } from 'lucide-react';
 
 const NAMES = { TANK: 'Tanque', TRUCK: 'Camión', ROBOT_SOLDIER: 'Soldado robot' };
 
@@ -7,24 +8,42 @@ export default function ConvoyPanel({ sim }) {
   const d = sim.convoy.decision;
   return (
     <div className="card stack">
-      <div className="card-title"><h3>Convoy enemigo</h3></div>
+      <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <ShieldAlert size={16} color="#d97706" />
+        <h3>Convoy Enemigo</h3>
+      </div>
       {sim.convoy.enemies.map((e) => (
         <div key={e.id} className={`enemy ${e.alive ? '' : 'dead'}`}>
-          <div className="row spread"><span>{e.id} · {NAMES[e.type]}</span><span className="mono">{e.hp}/{e.max_hp} HP</span></div>
+          <div className="row spread">
+            <span><b>{e.id}</b> · {NAMES[e.type]}</span>
+            <span className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Heart size={12} color={e.alive ? '#dc2626' : '#94a3b8'} /> {e.hp}/{e.max_hp} HP
+            </span>
+          </div>
           <div className="bar red"><i style={{ width: `${(e.hp / e.max_hp) * 100}%` }} /></div>
         </div>
       ))}
       {d && (
         <>
-          <h3 className="mt-s">¿Por qué ese camino?</h3>
+          <h3 className="mt-s" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <HelpCircle size={15} /> ¿Por qué eligió ese camino?
+          </h3>
           <p className="note">En <b>{d.at}</b> (t = {d.time}s): {d.note}.</p>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Corredor</th><th>Hacia</th><th>w + resto</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Corredor</th>
+                  <th>Hacia</th>
+                  <th>Costo (w + resto)</th>
+                </tr>
+              </thead>
               <tbody>
                 {d.options.map((o) => (
                   <tr key={o.corridor} className={o.corridor === d.chosen.corridor ? 'picked' : ''}>
-                    <td>{o.corridor}</td><td>{o.to}</td><td className="num">{o.cost.toFixed(1)}</td>
+                    <td><b>{o.corridor}</b></td>
+                    <td>{o.to}</td>
+                    <td className="num">{o.cost.toFixed(1)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -34,18 +53,29 @@ export default function ConvoyPanel({ sim }) {
       )}
       <div className="table-wrap">
         <table>
-          <thead><tr><th>Corredor</th><th>t(e)</th><th>P(e)</th><th>w(e)</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Corredor</th>
+              <th>t(e)</th>
+              <th>Peligro P(e)</th>
+              <th>Peso w(e)</th>
+            </tr>
+          </thead>
           <tbody>
             {sim.corridors.map((c) => (
               <tr key={c.id}>
-                <td>{c.id}</td><td className="num">{c.time.toFixed(1)}</td>
-                <td className="num">{c.danger.toFixed(1)}</td><td className="num">{c.weight.toFixed(1)}</td>
+                <td><b>{c.id}</b></td>
+                <td className="num">{c.time.toFixed(1)}</td>
+                <td className="num">{c.danger.toFixed(1)}</td>
+                <td className="num" style={{ fontWeight: '600', color: c.danger > 0 ? '#b45309' : 'inherit' }}>
+                  {c.weight.toFixed(1)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <p className="fine">w(e) = t(e) + α · P(e). Se recalcula en cada intersección con las defensas activas.</p>
+      <p className="fine">w(e) = t(e) + α · P(e). Se recalcula en cada intersección según las defensas activas.</p>
     </div>
   );
 }

@@ -1,13 +1,13 @@
 import React from 'react';
+import { Home, Share2, ShieldAlert, Play, Wifi, WifiOff } from 'lucide-react';
 
 export const TABS = [
-  { id: 'intro', n: '01', label: 'Inicio' },
-  { id: 'graphs', n: '02', label: 'Los grafos' },
-  { id: 'plan', n: '03', label: 'Plan de defensa' },
-  { id: 'sim', n: '04', label: 'Simulación' },
+  { id: 'intro', n: '01', label: 'Inicio', icon: Home },
+  { id: 'graphs', n: '02', label: 'Los grafos', icon: Share2 },
+  { id: 'plan', n: '03', label: 'Plan de defensa', icon: ShieldAlert },
+  { id: 'sim', n: '04', label: 'Simulación', icon: Play },
 ];
 
-/** Black top bar with the project name, backend status and navigation tabs. */
 export default function Header({ active, onChange, isConnected }) {
   return (
     <header className="topbar">
@@ -17,21 +17,30 @@ export default function Header({ active, onChange, isConnected }) {
             <span className="brand-mark" aria-hidden="true" />
             <h1>
               General P. Tardo
-              <small>Simulador de grafos · Estructuras de Datos</small>
+              <small>Defensa de Corredor · Universidad de Caldas</small>
             </h1>
           </div>
-          <div className="status-pill" title="Estado de la conexión con Flask">
-            <span className={`dot ${isConnected ? 'on' : ''}`} />
-            <span className="pill-text">{isConnected ? 'Backend conectado' : 'Backend sin conexión'}</span>
+          <div className={`status-pill ${isConnected ? 'connected' : 'disconnected'}`}>
+            {isConnected ? <Wifi size={14} className="icon-pulse" /> : <WifiOff size={14} />}
+            <span className="pill-text">{isConnected ? 'API Flask Online' : 'API Desconectada'}</span>
           </div>
         </div>
         <nav className="tabs" aria-label="Secciones">
-          {TABS.map((t) => (
-            <button key={t.id} className={`tab ${active === t.id ? 'active' : ''}`}
-              onClick={() => onChange(t.id)} aria-current={active === t.id ? 'page' : undefined}>
-              <span>{t.n}</span>{t.label}
-            </button>
-          ))}
+          {TABS.map((t) => {
+            const Icon = t.icon;
+            return (
+              <button
+                key={t.id}
+                className={`tab ${active === t.id ? 'active' : ''}`}
+                onClick={() => onChange(t.id)}
+                aria-current={active === t.id ? 'page' : undefined}
+              >
+                <Icon size={15} style={{ marginRight: '6px' }} />
+                <span>{t.n}</span>
+                {t.label}
+              </button>
+            );
+          })}
         </nav>
       </div>
     </header>
