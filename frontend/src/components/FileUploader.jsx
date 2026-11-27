@@ -3,6 +3,7 @@ import { uploadScenarioFile } from '../api/client';
 import { UploadCloud, FileCheck, AlertCircle, Sparkles } from 'lucide-react';
 
 const SAMPLES = [
+  { id: 'escenario_gran_ciudadela.json', label: '⚔️ Gran Fortaleza (Épico 12 Nodos)' },
   { id: 'escenario_general_p_tardo.json', label: 'General P. Tardo (Base)' },
   { id: 'escenario_asedio_final.json', label: 'El Asedio Final' },
   { id: 'escenario_complejo.json', label: 'Complejo (11 Nodos)' },
