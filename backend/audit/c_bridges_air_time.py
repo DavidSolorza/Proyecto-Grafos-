@@ -33,7 +33,7 @@ def collapse_and_blocked(api):
 @check("§8", "Tras el tiempo de reconstrucción el puente recupera su resistencia máxima y los detenidos reanudan solos")
 def rebuild_and_resume(api):
     m = Match(api, FRAGILE)
-    m.buy("infantry", 3)
+    m.buy("infantry", 4)                                            # S4 stays at the base to rebuild
     m.move(["S1"], "V_C1", "walk")
     m.move(["S2", "S3"], "V_C1", "moto")
     state = m.tick(37.75)
@@ -136,8 +136,9 @@ def end_defeat(api):
 
 @check("§11", "Fin: se llega al límite de tiempo sin llegada enemiga = victoria por resistencia")
 def end_resistance(api):
-    state = Match(api, FRAGILE, edit=lambda r: r["metadata"].update(time_limit=30)).tick(100)
-    assert (state["status"], state["clock"]) == ("VICTORY_RESISTANCE", 30.0)
+    slow = lambda raw: [c.update(speed_allowed=0.001) for c in raw["graph_m"]["edges"]]  # never arrives
+    state = Match(api, FRAGILE, edit=slow).tick(300)
+    assert (state["status"], state["clock"]) == ("VICTORY_RESISTANCE", 300.0)
 
 
 @check("§11", "Al terminar se detienen las actualizaciones")

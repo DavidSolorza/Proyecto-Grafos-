@@ -85,7 +85,7 @@ def test_only_bridges_are_reported_as_bridges():
 
 
 def test_motorcycles_wear_bridges_but_not_roads_on_the_same_trip():
-    sim, manager = crew_match(crew=0)
+    sim, manager = crew_match(crew=1)
     sim.world.budget.available += 1000
     (sid,) = sim.recruit("infantry", 1)
     sim.ground.request([sid], "V_C2", "moto")

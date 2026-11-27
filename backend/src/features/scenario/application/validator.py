@@ -32,11 +32,20 @@ def _ids(items, label, errors) -> set:
     return seen
 
 
+def _objects(items: list, label: str, errors: list) -> list:
+    """Keep only the JSON objects; report the rest instead of crashing on them."""
+    good = [item for item in items if isinstance(item, dict)]
+    if len(good) != len(items):
+        errors.append(f"{label}: todos los elementos deben ser objetos")
+    return good
+
+
 def _check_ge(ge: dict, errors: list) -> set:
     verts, edges = ge.get("vertices"), ge.get("edges")
     if not isinstance(verts, list) or not isinstance(edges, list):
         errors.append("graph_e debe tener las listas 'vertices' y 'edges'")
         return set()
+    verts, edges = _objects(verts, "GE vértices", errors), _objects(edges, "GE aristas", errors)
     ids = _ids(verts, "GE vértices", errors)
     for v in verts:
         if not _coords_ok(v.get("coords"), positive=True):
@@ -71,6 +80,7 @@ def _check_gm(gm: dict, errors: list) -> None:
     if not isinstance(verts, list) or not isinstance(cors, list):
         errors.append("graph_m debe tener las listas 'vertices' y 'edges'")
         return
+    verts, cors = _objects(verts, "GM vértices", errors), _objects(cors, "GM corredores", errors)
     ids = _ids(verts, "GM vértices", errors)
     for v in verts:
         if not _coords_ok(v.get("coords"), positive=False):

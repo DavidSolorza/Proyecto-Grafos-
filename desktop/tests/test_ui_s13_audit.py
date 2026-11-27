@@ -99,7 +99,7 @@ def test_consult_indicators_and_the_final_result():
 
 
 @pytest.mark.parametrize("operation,expected", [
-    ("compra", "Compraste 1 × infantry por $100"), ("traslado", "salen de V_BASE hacia V_C1"), ("llegada", "llegaron a V_C1")])
+    ("compra", "Compraste 1 × Infantería por $100"), ("traslado", "salen de V_BASE hacia V_C1"), ("llegada", "llegaron a V_C1")])
 def test_the_interface_explains_what_happened_and_why(operation, expected):
     d = sim_screen()
     d.click("Infantería")

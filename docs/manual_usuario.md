@@ -66,7 +66,7 @@ Si entras a una sección sin haber cargado un escenario, verás "Aún no hay un 
 
 ## 4. Paso 1 — Cargar un escenario (Inicio)
 
-1. En el cuadro **Cargar escenario**, pulsa **Seleccionar archivo** (en Pygame se abre el selector de la ventana; en la web,
+1. En el cuadro **Cargar escenario**, pulsa **Seleccionar archivo** (en Pygame se abre el diálogo de archivos del sistema; en la web,
    el del navegador) y elige un archivo `.json`.
 2. Si es válido, verás un mensaje verde y el **resumen**: presupuesto, número máximo de torres (K), tiempo de referencia
    D₀, coeficientes α (peligro) y β (altura), tiempo de reparación de puentes, personas por reparación, composición del convoy y
@@ -82,6 +82,8 @@ Escenarios incluidos en la carpeta `docs/`:
 | `escenario_complejo.json` | Ciclos, empates, una posición aislada y rutas alternativas en el laberinto. |
 | `escenario_puentes.json` | Puentes frágiles que se destruyen rápido. |
 | `escenario_cuadrilla.json` | La reconstrucción de puentes ocupa a 2 personas; incluye calles y un camino solo para motos. |
+| `escenario_asedio_final.json` | Puentes y un convoy más grande. |
+| `escenario_gran_ciudadela.json` | El más grande: 12 posiciones elevadas, 12 corredores y hasta 5 torres. |
 
 Puedes cargar otro escenario en cualquier momento: reemplaza el actual y reinicia el plan y la partida.
 Para crear el tuyo, copia uno de estos archivos y modifícalo (el significado de cada campo está en el
@@ -139,6 +141,8 @@ Cuando estés conforme, pulsa **Ir a la simulación →**.
 ## 7. Paso 4 — La simulación
 
 La pantalla tiene el **mapa** a la izquierda y los **paneles** a la derecha (en el celular, los paneles quedan debajo del mapa).
+En la web, la bitácora y el convoy están debajo; si la pantalla es angosta, el mapa se desliza hacia los lados.
+Cuando hay más de tres soldados en una misma posición, el mapa los resume como `×N` por tipo.
 
 ### 7.1 Controles del reloj
 
@@ -163,7 +167,7 @@ terminan) y el **gastado**. Pulsa uno de los tres botones para comprar:
 | Francotirador | $300 | 50 | 20 | 0,5 ataques/s |
 | Artillero | $500 | 100 | 15 | 0,2 ataques/s |
 
-(Valores del escenario simple; cada escenario puede cambiarlos.) Los soldados comprados **aparecen en la base**.
+(Son los valores fijos del enunciado: un archivo que los cambie se rechaza.) Los soldados comprados **aparecen en la base**.
 Nunca puedes quedar con saldo negativo: si no alcanza, el botón se desactiva o verás un mensaje. Cada máquina
 destruida te da una **recompensa** (tanque $150, camión $100, robot $50).
 
@@ -171,8 +175,10 @@ Los soldados en una torre alcanzan más lejos cuanto más alta es la torre: `alc
 
 ### 7.3 Mover soldados (panel "Soldados y transporte")
 
-1. Haz clic en uno o más **chips de soldado** para seleccionarlos (`S1 INF · en base V_BASE`).
-2. Elige el **Destino** (una torre del plan o la base) y el **Medio**:
+1. Haz clic en uno o más **chips de soldado** para seleccionarlos (`S1 · Infantería`, y debajo `en base V_BASE`).
+2. Elige el **Destino** (cualquier posición elevada: pulsa su botón o haz clic en ella en el mapa de Pygame) y el **Medio**.
+   Solo se ataca desde una torre; en otra posición el soldado queda *en punto*, sin disparar. El helicóptero va a
+   torres o helipuertos:
 
 | Medio | Capacidad | Costo | Notas |
 |---|---|---|---|
@@ -189,7 +195,9 @@ Los soldados en una torre alcanzan más lejos cuanto más alta es la torre: `alc
 - Si una orden no es válida (torre llena, ruta inexistente, soldado ocupado, dinero insuficiente), verás un mensaje rojo y
   **no cambia nada**.
 - Los chips de soldados en camino, volando o reconstruyendo un puente están desactivados: no reciben órdenes.
-- Hay un número máximo de vuelos (se muestra como `helicópteros: n · $costo`).
+- Hay un número máximo de vuelos (se muestra como `vuelos: n · $costo`).
+- En Pygame, las listas que no caben (soldados, destinos, traslados, corredores, paso a paso del plan) se recorren con los
+  botones `<` `>` o con la rueda del ratón.
 
 ### 7.4 Puentes
 
@@ -197,8 +205,9 @@ Cada puente muestra su resistencia en el mapa (`3/3`). Cuando llega a cero se **
 regresiva y nadie puede iniciar un cruce nuevo (los que ya estaban cruzando terminan). Después del tiempo de
 reconstrucción, el puente recupera su resistencia y vuelve a funcionar.
 
+- Si cae un puente más adelante en su ruta, el soldado **recalcula en el siguiente vértice**.
 - Si un soldado en camino se queda sin ruta, **se detiene** y reanuda solo cuando el puente se reconstruye.
-- En escenarios con "personas por reparación", la obra necesita esa cantidad de soldados **en la base**; mientras
+- La obra necesita las "personas por reparación" del escenario (al menos 1) **en la base**: deja algún soldado allí. Mientras
   trabajan aparecen como **reconstruyendo** y no pueden atacar ni moverse. Si no hay suficientes, el mapa dice
   **✕ sin cuadrilla** y la obra espera.
 - Las **calles** (sin número) nunca se destruyen.
@@ -222,10 +231,10 @@ mapa y no sabes por qué, búscalo allí.
 |---|---|
 | **Victoria por eliminación** | Todas las máquinas fueron destruidas. |
 | **Derrota** | Al menos una máquina viva llega a la salida. |
-| **Victoria por resistencia** | Se alcanza el límite de tiempo (300 s por defecto) sin que llegue ninguna. |
+| **Victoria por resistencia** | Se alcanza el límite de tiempo (300 s) sin que llegue ninguna. |
 
 Si varias cosas ocurren en el mismo instante, se resuelven en ese orden: primero los ataques, luego la llegada a la
-salida y por último el tiempo. Al terminar, el reloj se detiene y aparece un cartel con **Jugar de nuevo** y **Ver
+salida y por último el tiempo. Al terminar ya no se puede comprar ni mover soldados, el reloj se detiene y aparece un cartel con **Jugar de nuevo** y **Ver
 mapa** (para mirar el estado final).
 
 ## 8. Una partida de ejemplo (escenario simple)
@@ -254,6 +263,7 @@ Si no compras nada, el convoy llega a la salida a los **23 s** y pierdes: la der
 | "No existe una ruta válida" | Un puente destruido o una conexión inexistente impide llegar. |
 | "Algún soldado está ocupado…" | Ese soldado va en camino, vuela o reconstruye un puente. |
 | "No quedan usos de helicóptero" | Ya agotaste los vuelos permitidos. |
+| "La partida terminó…" | Pulsa **Reiniciar** para dar nuevas órdenes. |
 
 ## 10. Preguntas frecuentes
 

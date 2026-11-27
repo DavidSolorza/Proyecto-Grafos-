@@ -18,7 +18,6 @@ def _ready(name="escenario_general_p_tardo.json", n=3, kind="infantry"):
     (["S9"], "V_C1", "walk"),              # soldier does not exist
     (["S1", "S2"], "V_C1", "walk"),        # walking carries one soldier
     (["S1", "S2", "S3"], "V_C1", "moto"),  # a motorcycle carries at most two
-    (["S1"], "V_T1", "walk"),              # transit vertex is not a tower
     (["S1"], "V_BASE", "walk"),            # origin == destination
     (["S1"], "V_C1", "jet"),               # unknown transport
     ([], "V_C1", "walk"),                  # nobody selected
@@ -121,7 +120,7 @@ def test_soldier_recomputes_route_when_a_bridge_ahead_collapses():
 
 
 def test_blocked_soldier_resumes_when_connectivity_returns():
-    sim, manager = _ready(n=1)
+    sim, manager = _ready(n=2)                              # S2 stays at the base to rebuild
     sim.ground.request(["S1"], "V_C1", "walk")
     sim.tick(1)
     e2 = manager.graph_e.edges["E_E2"]

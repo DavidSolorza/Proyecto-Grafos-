@@ -4,7 +4,14 @@
 .card.dark { background: linear-gradient(160deg, var(--ink-2), var(--ink)); color: var(--paper); border-color: var(--ink); }
 .card.dark p { color: var(--sand); }
 .card.dark h3, .card.dark b { color: var(--paper); }
-.card-title { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.card-title { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.card-title > .badge { margin-left: auto; }
+.card-title h3 { min-width: 0; overflow-wrap: anywhere; }
+
+/* Button row above the maps and the box with the details of the selected vertex */
+.toolbar { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-3); }
+.node-info { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--sp-2); font-size: var(--fs-sm); }
+p.node-info { padding-block: var(--sp-2); }
 
 /* Buttons: pill shaped, with a minimum touch target that grows with the screen */
 .btn { min-height: var(--tap); display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
@@ -39,7 +46,7 @@
 .font-base { font-size: var(--fs-base); }
 
 /* Toast styles */
-.toast-viewport { position: fixed; bottom: var(--sp-4); right: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); z-index: 9999; max-width: 420px; }
+.toast-viewport { position: fixed; bottom: var(--sp-4); right: var(--sp-4); display: flex; flex-direction: column; gap: var(--sp-2); z-index: 9999; max-width: min(420px, calc(100vw - 2 * var(--sp-4))); }
 .toast-card { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-3) var(--sp-4); border-radius: var(--radius-sm); font-size: var(--fs-xs); border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--card); color: var(--ink); }
 .toast-card.error { background: #fff1f2; border-color: #fecdd3; color: #be123c; }
 .toast-card.success { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
@@ -47,10 +54,10 @@
 .toast-close { background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; padding: 2px; margin-left: auto; display: flex; align-items: center; }
 
 /* HTTP Drawer styles */
-.http-drawer-pill { position: fixed; bottom: var(--sp-4); left: var(--sp-4); z-index: 9990; font-size: var(--fs-2xs); }
+.http-drawer-pill { position: relative; align-self: flex-start; margin: auto var(--pad-x) var(--sp-3); z-index: 20; font-size: var(--fs-2xs); }
 .http-drawer-btn { display: inline-flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2) var(--sp-3); border-radius: 999px; border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); cursor: pointer; box-shadow: var(--shadow); font-weight: 600; font-size: var(--fs-2xs); }
 .http-drawer-btn:hover { background: var(--paper-deep); }
-.http-drawer-box { position: absolute; bottom: calc(100% + var(--sp-2)); left: 0; width: 340px; max-height: 280px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow); overflow-y: auto; padding: var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-2xs); }
+.http-drawer-box { position: absolute; bottom: calc(100% + var(--sp-2)); left: 0; width: min(340px, calc(100vw - 2 * var(--pad-x))); max-height: clamp(200px, 40vh, 280px); background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-sm); box-shadow: var(--shadow); overflow-y: auto; padding: var(--sp-3); display: flex; flex-direction: column; gap: var(--sp-2); font-size: var(--fs-2xs); }
 .http-drawer-head { display: flex; justify-content: space-between; align-items: center; padding-bottom: var(--sp-2); border-bottom: 1px solid var(--line); font-weight: 700; color: var(--ink); }
 .http-clear-btn { background: none; border: none; color: var(--sand); cursor: pointer; font-size: var(--fs-2xs); font-family: inherit; }
 .http-clear-btn:hover { color: var(--ink); }
@@ -68,7 +75,10 @@ select, input[type='number'] { font: inherit; font-size: var(--fs-sm); min-heigh
 select:hover, input:hover { border-color: var(--ochre); }
 select:focus-visible, input:focus-visible { box-shadow: 0 0 0 3px rgba(184, 137, 59, 0.25); }
 
-/* Touch screens: every control gets a full-size target (44 px is the usual minimum for fingers) */
+/* Touch screens: every control gets a full-size target (44 px is the usual minimum for fingers).
+   The "html" prefix keeps this rule above the component stylesheets that load later. */
 @media (pointer: coarse) {
-  .btn.small, .chip, .tab, select, .explainer summary { min-height: max(44px, calc(var(--tap) * 0.95)); }
+  html .btn, html .btn.small, html .chip, html .tab, html select, html .explainer summary, html .http-drawer-btn,
+  html .hud-btn-mini { min-height: max(44px, var(--tap)); }
+  html .hud-btn-mini { min-width: max(44px, var(--tap)); }
 }

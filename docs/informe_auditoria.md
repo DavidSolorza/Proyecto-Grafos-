@@ -1,6 +1,6 @@
 # Informe de auditoría del enunciado
 
-Generado con `python auditar_enunciado.py` el 2026-11-11. Cada punto se comprueba contra un servidor Flask real por HTTP, que es lo que usan los clientes Pygame y React.
+Generado con `python auditar_enunciado.py` el 2026-11-27. Cada punto se comprueba contra un servidor Flask real por HTTP, que es lo que usan los clientes Pygame y React.
 
 **Resultado: 47 de 47 puntos correctos.**
 
@@ -80,7 +80,7 @@ Se comprueba con `desktop/tests/test_ui_s13_audit.py` (ventana fuera de pantalla
 | Manual técnico (dominio, grafos, responsabilidades, JSON, invariantes, decisiones, complejidad) | ✔ `docs/manual_tecnico.md` |
 | Reporte de uso de inteligencia artificial | ✔ `docs/reporte_uso_ia.md` (los integrantes deben completar los campos marcados) |
 | Distribución de tareas entre los dos integrantes | ✔ `docs/distribucion_tareas.md` |
-| Dos escenarios JSON de distinta complejidad | ✔ cuatro escenarios en `docs/` |
+| Dos escenarios JSON de distinta complejidad | ✔ seis escenarios en `docs/` |
 | Uso de Pygame | ✔ `desktop/` (cliente de escritorio sobre la API Flask) |
 | Videos (explicación en una segunda lengua y videotutorial) | ⚠ pendiente: los deben grabar los integrantes |
 
@@ -88,8 +88,8 @@ Se comprueba con `desktop/tests/test_ui_s13_audit.py` (ventana fuera de pantalla
 
 | Tema | Decisión |
 |---|---|
-| Destinos de un traslado | Una torre del plan o la base (la capacidad se define para torres). |
-| Helipuerto (`HELIPORT`) | Es un tipo de posición del grafo sin comportamiento propio: los vuelos salen de la base o de torres y llegan a torres. |
+| Destinos de un traslado | Cualquier posición de GE; la capacidad solo aplica a torres y solo desde ellas se ataca. |
+| Helipuerto (`HELIPORT`) | Punto de aterrizaje y recogida sin límite de cupo. |
 | Eventos temporales | Contadores por entidad (obra del puente, vuelo, traslado, enfriamiento del soldado) avanzados por el reloj de paso fijo de 0,25 s, en lugar de una cola de eventos; cuesta O(entidades) por paso. |
 | Quién forma la cuadrilla de reconstrucción | Soldados que están en la base. |
 | `max_uses` del helicóptero | Número total de vuelos permitidos. |

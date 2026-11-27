@@ -2,10 +2,8 @@
 from src.core.errors.handlers import AppError
 from src.features.elevated_graph.application.ge_paths import shortest_path, edge_time
 from src.features.simulation.application.bridges import BridgeManager
-from src.features.simulation.domain.units import SoldierStatus, Transfer
+from src.features.simulation.domain.units import MOVABLE, SoldierStatus, Transfer
 from src.features.simulation.domain.world import World
-
-MOVABLE = (SoldierStatus.AT_BASE, SoldierStatus.STATIONED)
 
 
 class GroundTransport:
@@ -20,6 +18,7 @@ class GroundTransport:
     def request(self, soldier_ids: list[str], dest: str, mode: str) -> Transfer:
         """Check everything first; the state is modified only if all checks pass."""
         w = self.world
+        w.ensure_open()
         graph = w.manager.graph_e
         if mode not in ("walk", "moto"):
             raise AppError("Medio de transporte inválido (walk o moto)")
@@ -37,8 +36,6 @@ class GroundTransport:
             raise AppError("A pie va 1 soldado; en moto pueden ir 1 o 2")
         if dest not in graph.vertices:
             raise AppError("El destino no existe")
-        if dest != w.manager.graph_e.get_base_vertex().id and dest not in w.towers:
-            raise AppError("El destino debe ser una torre del plan o la base")
         if dest == origin:
             raise AppError("El origen y el destino son el mismo vértice")
         if dest in w.towers and w.free_slots(dest) < len(group):
@@ -79,11 +76,10 @@ class GroundTransport:
             self._finish_edge(t)
 
     def _start_edge(self, t: Transfer) -> bool:
+        # Section 7: a collapse anywhere ahead is handled at this vertex, before going on
+        if any(e.is_destroyed for e in t.edges[t.index:]) and not self._replan(t):
+            return False
         edge = t.edges[t.index]
-        if edge.is_destroyed:  # collapsed before entering: search again from here
-            if not self._replan(t):
-                return False
-            edge = t.edges[t.index]
         t.on_edge, t.progress, t.duration = True, 0.0, edge_time(edge, t.mode)
         return True
 
@@ -97,8 +93,10 @@ class GroundTransport:
                 w.soldiers[sid].status = SoldierStatus.WAITING
             w.log("move", f"{', '.join(t.soldier_ids)} quedan detenidos en {here}: no hay ruta a {t.dest}.")
             return False
+        why = "reanudan: vuelve a haber ruta" if t.status == "WAITING" else "recalculan por un puente caído"
         _, t.vertices, t.edges = route
         t.index, t.status = 0, "MOVING"
+        w.log("move", f"{', '.join(t.soldier_ids)} {why} desde {here}: {' → '.join(t.vertices)}.")
         for sid in t.soldier_ids:
             w.soldiers[sid].status = SoldierStatus.MOVING
         return True
@@ -127,6 +125,6 @@ class GroundTransport:
             w.reserved[t.dest] -= len(t.soldier_ids)
         for sid in t.soldier_ids:
             s = w.soldiers[sid]
-            s.status = SoldierStatus.STATIONED if t.dest in w.towers else SoldierStatus.AT_BASE
+            s.status = w.arrival_status(t.dest)
             s.next_attack = w.clock + 0.25  # may attack from the next combat update
         w.log("move", f"{', '.join(t.soldier_ids)} llegaron a {t.dest}.")

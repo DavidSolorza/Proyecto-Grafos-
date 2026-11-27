@@ -21,8 +21,15 @@ def list_dir(folder: Path) -> list[tuple[str, bool]]:
                   key=lambda i: (not i[1], i[0].lower()))
 
 
-def choose_native(start=None):
-    """Native OS file dialog using tkinter (fallback to None if unavailable)."""
+def drives() -> list[Path]:
+    """Windows drive roots, shown as shortcuts (empty on other systems)."""
+    if os.name != "nt":
+        return []
+    return [Path(f"{c}:/") for c in string.ascii_uppercase if os.path.exists(f"{c}:/")]
+
+
+def choose_native(start=None) -> tuple[bool, Path | None]:
+    """Native OS dialog as (available, path). (True, None) means the user cancelled."""
     try:
         import tkinter as tk
         from tkinter import filedialog
@@ -35,9 +42,9 @@ def choose_native(start=None):
             filetypes=[("Archivos JSON", "*.json"), ("Todos los archivos", "*.*")]
         )
         root.destroy()
-        return Path(path) if path else None
-    except Exception:
-        return None
+        return True, Path(path) if path else None
+    except Exception:                                  # no tkinter or no display: use our own dialog
+        return False, None
 
 
 class FilePicker:
@@ -53,7 +60,6 @@ class FilePicker:
         self.entries = list_dir(folder)
 
     def draw(self, ui, screen_rect):
-        pygame.draw.rect(ui.surface, (20, 17, 14, 0), screen_rect)
         dim = pygame.Surface(screen_rect.size, pygame.SRCALPHA)
         dim.fill((20, 17, 14, 170))
         ui.surface.blit(dim, screen_rect.topleft)

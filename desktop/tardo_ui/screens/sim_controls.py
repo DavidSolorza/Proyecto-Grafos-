@@ -33,14 +33,16 @@ def recruit(ui, box, store) -> None:
     sim = store.sim
     b = sim["budget"]
     inner = ui.card(box, "Presupuesto")
-    ui.text(f"Disponible ${b['available']:.0f}   Reservado ${b['reserved']:.0f}   Gastado ${b['spent']:.0f}   "
-            f"Ganado ${b['earned']:.0f}", (inner.x, inner.y - 2), "mono", t.INK, max_w=inner.w)
+    amounts = (("Disponible", "available"), ("Reservado", "reserved"), ("Gastado", "spent"), ("Ganado", "earned"))
+    for i, (label, field) in enumerate(amounts):                       # a 2 x 2 grid never needs to cut the figures
+        ui.text(f"{label} ${b[field]:.0f}", (inner.x + (i % 2) * (inner.w // 2), inner.y - 3 + (i // 2) * 16), "mono",
+                t.INK if i == 0 else t.SOFT, max_w=inner.w // 2 - 6)
     cfg = sim["defenders_config"]
     w = inner.w // 3
     for i, kind in enumerate(sorted(cfg, key=lambda k: cfg[k]["cost"])):
         c, x = cfg[kind], inner.x + i * w
-        if ui.button((x, inner.y + 20, w - 8, 30), f"{NAMES[kind]}  ${c['cost']}", key=NAMES[kind], tone="ghost",
-                     enabled=b["available"] >= c["cost"]):
+        if ui.button((x, inner.y + 33, w - 8, 30), f"{NAMES[kind]}  ${c['cost']}", key=NAMES[kind], tone="ghost",
+                     enabled=b["available"] >= c["cost"] and not store.finished, kind="small"):
             store.recruit(kind)
-        ui.text(f"dmg {c['damage']:g} · alc {c['base_range']:g} · {c['frequency']:g}/s", (x + 2, inner.y + 53), "small", t.SOFT,
-                max_w=w - 10)
+        for row, text in enumerate((f"daño {c['damage']:g} · alcance {c['base_range']:g}", f"{c['frequency']:g} ataques/s")):
+            ui.text(text, (x + 2, inner.y + 66 + row * 15), "small", t.SOFT, max_w=w - 6)

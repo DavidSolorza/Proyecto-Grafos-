@@ -12,13 +12,14 @@ const NAMES = { infantry: 'Infantería', sniper: 'Francotirador', gunner: 'Artil
 /** Budget (available / reserved) and the buttons to buy soldiers. They appear at the base. */
 export default function RecruitPanel({ sim, onRecruit }) {
   const { budget, defenders_config: cfg } = sim;
+  const finished = ['VICTORY_ELIMINATION', 'VICTORY_RESISTANCE', 'DEFEAT'].includes(sim.status);
   return (
     <div className="card stack">
       <div className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
         <DollarSign size={16} />
         <h3>Presupuesto y Reclutamiento</h3>
       </div>
-      <div className="stats">
+      <div className="stats three">
         <div className="stat">
           <b>${budget.available.toFixed(0)}</b>
           <span>Disponible</span>
@@ -40,7 +41,7 @@ export default function RecruitPanel({ sim, onRecruit }) {
               key={type}
               className="btn ghost small recruit-btn"
               onClick={() => onRecruit(type, 1)}
-              disabled={budget.available < c.cost}
+              disabled={finished || budget.available < c.cost}
               style={{ display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left' }}
             >
               <Icon size={18} style={{ flexShrink: 0, opacity: 0.8 }} />

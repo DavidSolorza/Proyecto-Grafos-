@@ -6,7 +6,7 @@
     "beta": 0.15,
     "max_towers_K": 3,
     "initial_budget": 3000,
-    "bridge_repair_time": 25.0,
+    "bridge_repair_time": 25.0, "bridge_repair_crew": 1,
     "time_limit": 300.0
   },
   "graph_e": {

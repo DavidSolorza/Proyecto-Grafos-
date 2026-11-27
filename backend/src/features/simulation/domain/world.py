@@ -1,10 +1,18 @@
 """World: the shared state every simulation component reads and writes."""
+import re
 from dataclasses import dataclass, field
+from src.core.errors.handlers import AppError
 from src.features.simulation.domain.entities import SimState
 from src.features.simulation.domain.units import Soldier, SoldierStatus, Enemy
 
 STEP = 0.25          # logical seconds per internal step
 TOWER_CAPACITY = 3   # max soldiers per tower (occupants + reservations)
+FINISHED = (SimState.VICTORY_ELIMINATION, SimState.VICTORY_RESISTANCE, SimState.DEFEAT)
+
+
+def natural_key(identifier: str) -> list:
+    """Identification order: digits compare as numbers, so S2 goes before S10."""
+    return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", identifier)]
 
 
 @dataclass
@@ -56,6 +64,18 @@ class World:
     enemies: list[Enemy] = field(default_factory=list)
     reserved: dict[str, int] = field(default_factory=dict)
     events: list[dict] = field(default_factory=list)
+
+    def ensure_open(self) -> None:
+        """Section 11: once the match ends nothing else may change."""
+        if self.status in FINISHED:
+            raise AppError("La partida terminó: reinicia para seguir dando órdenes", 409)
+
+    def arrival_status(self, vertex_id: str) -> SoldierStatus:
+        """What a soldier becomes on arrival: only a tower of the plan lets it attack."""
+        if vertex_id in self.towers:
+            return SoldierStatus.STATIONED
+        is_base = vertex_id == self.manager.graph_e.get_base_vertex().id
+        return SoldierStatus.AT_BASE if is_base else SoldierStatus.DEPLOYED
 
     def log(self, kind: str, text: str) -> None:
         """Record what happened (the UI shows it, so the user knows why)."""

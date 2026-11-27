@@ -36,7 +36,7 @@ python -m pip install -r requirements-dev.txt
 python run.py
 ```
 
-Debe quedar corriendo y mostrar `Starting Flask API on http://0.0.0.0:5000` y `Running on http://127.0.0.1:5000`. **No cierres esta terminal.**
+Debe quedar corriendo y mostrar `Starting Flask API on http://127.0.0.1:5000` y `Running on http://127.0.0.1:5000`. **No cierres esta terminal.**
 Comprobación rápida: abre <http://localhost:5000/api/health> en el navegador; debe decir `"status": "healthy"`.
 
 ### A.3 Frontend (terminal 2, otra ventana)
@@ -109,8 +109,8 @@ En cada terminal pulsa `Ctrl + C`; la ventana Pygame se cierra con su botón de 
 
 ## B. Verificación automática (2 minutos, sin navegador)
 
-El enunciado exige que los algoritmos se verifiquen **sin interfaz gráfica**: las 232 pruebas del backend no abren ninguna
-ventana. Las 91 pruebas de la interfaz Pygame tampoco abren una ventana real (usan un controlador de vídeo falso de SDL y
+El enunciado exige que los algoritmos se verifiquen **sin interfaz gráfica**: las 284 pruebas del backend no abren ninguna
+ventana. Las 122 pruebas de la interfaz Pygame tampoco abren una ventana real (usan un controlador de vídeo falso de SDL y
 clics simulados). Con el backend preparado (A.2):
 
 ```bash
@@ -126,10 +126,10 @@ Resultado esperado: una línea ✔ por cada sección del enunciado (incluida la 
 ```
 ✔ Sin librerías de grafos ni heapq
 ✔ Todos los archivos tienen menos de 150 líneas
-✔ 4 escenarios de ejemplo válidos
-Suite del backend: 232 passed
+✔ 6 escenarios de ejemplo válidos
+Suite del backend: 284 passed
 ✔ §13     Interfaz Pygame: mapa, plan, compra, transporte, rutas, puentes y resultado
-          91 passed
+          122 passed
 RESULTADO: TODO CORRECTO
 ```
 
@@ -236,7 +236,7 @@ Con la partida ya iniciada, vuelve a **Plan de defensa** y pulsa **Recalcular pl
 
 ### C.10 Puentes que colapsan (§8) — `docs/escenario_puentes.json`
 
-Sube el archivo, calcula el plan, ve a Simulación, compra **3 Infanterías**: `S1` a pie a `V_C1`; `S2` y `S3` en
+Sube el archivo, calcula el plan, ve a Simulación, compra **4 Infanterías** (`S4` se queda en la base para reconstruir): `S1` a pie a `V_C1`; `S2` y `S3` en
 moto a `V_C1`; **5×** + **Iniciar**. Esperado: `E_E1` pasa de 3/3 a **2/3** a los 5 s (la moto desgasta una vez,
 aunque lleven dos), `E_E2` colapsa a los 8 s (**✕ 30 s**), `S1` queda **detenido** en `V_T1`, el puente se
 reconstruye a los **38 s** y `S1` **reanuda solo**. Tabla completa en `guia_pruebas.md` §2.8.
@@ -298,4 +298,4 @@ se deslizan y los paneles pasan debajo del mapa.
 | §11 | Reloj lógico (0.25 s), prioridades y condiciones de fin | ✔ | C.4, C.5 |
 | §12 | JSON elegido desde la interfaz, sin rutas fijas | ✔ | C.1 |
 | §13 | Interfaz Pygame con mapa 2D, cargar y validar, árbol y torres, comprar, transportar, rutas, puentes, resultado | ✔ **Pygame** (principal) + **React** (web), ambos sobre **Flask** y con la misma partida | todo C, en especial C.14 |
-| §14 | Código en Git, manual de usuario y técnico, dos escenarios, videos | ✔ Código, escenarios (4), manual de usuario, manual técnico, reporte de uso de IA y [distribución de tareas](distribucion_tareas.md) (completa los campos **[completar]** del reporte). **Faltan los dos videos**, que deben grabar ambos integrantes. Haz `git commit` de tus cambios para que queden en el historial. | — |
+| §14 | Código en Git, manual de usuario y técnico, dos escenarios, videos | ✔ Código, escenarios (6), manual de usuario, manual técnico, reporte de uso de IA y [distribución de tareas](distribucion_tareas.md) (completa los campos **[completar]** del reporte). **Faltan los dos videos**, que deben grabar ambos integrantes. Haz `git commit` de tus cambios para que queden en el historial. | — |

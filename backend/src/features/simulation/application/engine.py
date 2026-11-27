@@ -7,11 +7,11 @@ from src.features.simulation.application.convoy import Convoy
 from src.features.simulation.application.ground import GroundTransport
 from src.features.simulation.domain.entities import EnemyType, SimState, SoldierType
 from src.features.simulation.domain.units import ENEMY_STATS, Enemy, Soldier
-from src.features.simulation.domain.world import STEP, Budget, Tower, World
+from src.features.simulation.domain.world import FINISHED, STEP, Budget, Tower, World
 
-FINISHED = (SimState.VICTORY_ELIMINATION, SimState.VICTORY_RESISTANCE, SimState.DEFEAT)
 CONVOY_KEYS = {"tanks": EnemyType.TANK, "trucks": EnemyType.TRUCK,
                "robot_soldiers": EnemyType.ROBOT_SOLDIER}
+SOLDIER_NAMES = {"INFANTRY": "Infantería", "SNIPER": "Francotirador", "GUNNER": "Artillero"}
 
 
 class Simulation:
@@ -38,6 +38,7 @@ class Simulation:
     def recruit(self, kind: str, count: int) -> list[str]:
         """Buy soldiers; they appear at the base. Never leaves a negative budget."""
         w = self.world
+        w.ensure_open()
         cfg = w.manager.defenders_config.get(kind.lower())
         if cfg is None or kind.upper() not in SoldierType.__members__:
             raise AppError("Tipo de soldado inválido")
@@ -55,7 +56,7 @@ class Simulation:
                         cfg["base_range"], cfg["frequency"], base.id, tuple(base.coords))
             w.soldiers[s.id] = s
             ids.append(s.id)
-        w.log("buy", f"Compraste {count} × {kind} por ${total}. Aparecen en la base ({', '.join(ids)}).")
+        w.log("buy", f"Compraste {count} × {SOLDIER_NAMES[kind.upper()]} por ${total}. Aparecen en la base ({', '.join(ids)}).")
         return ids
 
     def tick(self, dt: float) -> None:

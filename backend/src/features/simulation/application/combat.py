@@ -2,7 +2,7 @@
 from math import dist as euclid
 from src.features.simulation.domain.entities import SoldierType
 from src.features.simulation.domain.units import SoldierStatus
-from src.features.simulation.domain.world import World
+from src.features.simulation.domain.world import World, natural_key
 
 
 class CombatResolver:
@@ -13,7 +13,7 @@ class CombatResolver:
 
     def update(self, convoy_xy: tuple[float, float]) -> None:
         w = self.world
-        for sid in sorted(w.soldiers):  # fixed order keeps the simulation deterministic
+        for sid in sorted(w.soldiers, key=natural_key):  # fixed order keeps the simulation deterministic
             s = w.soldiers[sid]
             if s.status != SoldierStatus.STATIONED or w.clock < s.next_attack:
                 continue
@@ -24,7 +24,7 @@ class CombatResolver:
             if s.type == SoldierType.GUNNER:
                 targets = in_range                                    # area damage
             else:
-                targets = [min(in_range, key=lambda e: (e.hp, e.id))]  # weakest first
+                targets = [min(in_range, key=lambda e: (e.hp, natural_key(e.id)))]  # weakest first
             for e in targets:
                 self._hit(s, e)
             s.next_attack = w.clock + 1 / s.frequency

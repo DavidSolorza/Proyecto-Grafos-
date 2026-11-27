@@ -83,7 +83,7 @@ def test_resizing_the_window_rebuilds_the_canvas_only_when_needed():
 def test_visual_polish_header_gradient_card_shadow_and_map_grid(ui):
     ui.load()
     ui.go("grafos")
-    top, bottom = tuple(ui.surface.get_at((600, 2)))[:3], tuple(ui.surface.get_at((600, 92)))[:3]
+    top, bottom = tuple(ui.surface.get_at((600, 2)))[:3], tuple(ui.surface.get_at((600, 72)))[:3]
     assert top != bottom and sum(top) > sum(bottom)                                       # header gradient: lighter on top
     card = ui.hits["Ambas capas"]                                                         # a button inside the side card
     assert card.right < ui.surface.get_width()

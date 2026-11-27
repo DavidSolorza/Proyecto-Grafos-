@@ -49,6 +49,16 @@ def clamp(low: float, value: float, high: float) -> float:
     return max(low, min(value, high))
 
 
+def fluid(low: float, preferred: float, high: float) -> int:
+    """Size in pixels that follows the available room between two limits (CSS clamp for layouts)."""
+    return round(clamp(low, preferred, high))
+
+
+def window_size(desktop_w: int, desktop_h: int) -> tuple[int, int]:
+    """Initial window: the design size, reduced when the screen is smaller (leaves room for taskbar and title bar)."""
+    return fluid(840, desktop_w - 40, BASE_SIZE[0]), fluid(560, desktop_h - 90, BASE_SIZE[1])
+
+
 def ui_scale(width: int, height: int) -> float:
     """Fluid scale of the whole interface: it follows the window size but stays between a minimum and a maximum."""
     raw = clamp(MIN_SCALE, min(width / BASE_SIZE[0], height / BASE_SIZE[1]), MAX_SCALE)

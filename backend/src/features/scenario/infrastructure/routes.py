@@ -70,7 +70,7 @@ def upload_scenario():
         new_mgr = ScenarioLoader.load_from_dict(data)
     except (json.JSONDecodeError, UnicodeDecodeError):
         raise AppError("El archivo no es un JSON válido")
-    except (KeyError, ValueError, TypeError) as exc:
+    except (KeyError, ValueError, TypeError, AttributeError, OverflowError) as exc:
         raise AppError(f"Escenario con formato incorrecto: {exc!r}")
 
     validation = new_mgr.validate_initial_state()

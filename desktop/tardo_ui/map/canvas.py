@@ -2,8 +2,9 @@
 import pygame
 
 from tardo_ui import theme as t
+from tardo_ui.map.labels import Labels
 from tardo_ui.map.layers import draw_corridors, draw_roads, draw_vertices_e, draw_vertices_m
-from tardo_ui.map.units import draw_radii, draw_units
+from tardo_ui.map.units import draw_radii, draw_units, park_convoy, park_soldiers
 from tardo_ui.map.view import Viewport
 
 LEGEND = {
@@ -51,36 +52,53 @@ def draw_map(ui, rect, store, units=False, tree=False, radii=False, layers="both
     tree_ids = [e["id"] for e in plan["mst"]["edges"]] if tree and plan else []
     covered = plan["covered_corridors"] if radii and plan else []
     ui.surface.set_clip(rect)
+    labels = ui.labels = Labels(ui, rect)                       # texts are placed together at the end, without overlaps
     if layers in ("both", "gm"):
         route_ids = ((sc.get("initial_route") or {}).get("corridors", [])) if route else []
-        draw_corridors(ui, vp, sc, sim, covered, route_ids)
+        draw_corridors(ui, vp, sc, sim, labels, covered, route_ids)
     if layers in ("both", "ge"):
         if radii and plan:
             draw_radii(ui, vp, sc, plan)
-        draw_roads(ui, vp, sc, sim, tree_ids)
+        draw_roads(ui, vp, sc, sim, labels, tree_ids)
     sel = store.selected or {}
     if layers in ("both", "gm"):
-        draw_vertices_m(ui, vp, sc, sel.get("id") if sel.get("network") == "GM" else None)
+        draw_vertices_m(ui, vp, sc, labels, sel.get("id") if sel.get("network") == "GM" else None)
     if layers in ("both", "ge"):
-        draw_vertices_e(ui, vp, sc, sim, store.tower_ids, sel.get("id") if sel.get("network") == "GE" else None)
+        draw_vertices_e(ui, vp, sc, sim, labels, store.tower_ids, sel.get("id") if sel.get("network") == "GE" else None)
     if units and sim:
-        draw_units(ui, vp, sim)
+        park_soldiers(ui, vp, sim, labels)
+        park_convoy(ui, vp, sim, labels)
+    labels.flush()
+    if units and sim:
+        draw_units(ui, vp, sim, labels)
     ui.surface.set_clip(None)
     if interactive and ui.clicked(rect):
         hit = vp.pick(sc, layers, ui.click)
         store.selected = {"network": hit[0], "id": hit[1]["id"]} if hit else None
 
 
+def legend_layout(ui, keys, max_w: int) -> list:
+    """(key, dx, dy) of every legend entry, wrapping to new rows when the width runs out."""
+    out, x, y = [], 0, 0
+    for key in keys:
+        width = ui.fonts.get("small").size(LEGEND[key][1])[0] + 26
+        if x and x + width > max_w:
+            x, y = 0, y + 20
+        out.append((key, x, y))
+        x += width + 8
+    return out
+
+
+def legend_height(ui, keys, max_w: int) -> int:
+    return legend_layout(ui, keys, max_w)[-1][2] + 22
+
+
 def draw_legend(ui, pos, keys, max_w) -> int:
     """Row of color swatches under the map; returns the y below it."""
-    x, y = pos
-    for key in keys:
+    for key, dx, dy in legend_layout(ui, keys, max_w):
         color, label = LEGEND[key]
-        width = ui.fonts.get("small").size(label)[0] + 26
-        if x + width > pos[0] + max_w:
-            x, y = pos[0], y + 20
+        x, y = pos[0] + dx, pos[1] + dy
         pygame.draw.rect(ui.surface, color, (x, y + 3, 12, 12), border_radius=3)
         pygame.draw.rect(ui.surface, t.INK, (x, y + 3, 12, 12), 1, border_radius=3)
         ui.text(label, (x + 18, y + 1), "small", t.SOFT)
-        x += width + 8
-    return y + 22
+    return pos[1] + legend_height(ui, keys, max_w)

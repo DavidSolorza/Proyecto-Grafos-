@@ -16,11 +16,16 @@ ENEMY_STATS = {
 class SoldierStatus(str, Enum):
     """Where a soldier is and what it is doing."""
     AT_BASE = "AT_BASE"
+    DEPLOYED = "DEPLOYED"     # at a position that is neither the base nor a tower (cannot attack)
     STATIONED = "STATIONED"   # inside a tower, able to attack
     MOVING = "MOVING"         # walking or riding a motorcycle
     WAITING = "WAITING"       # stopped because no route exists
     FLYING = "FLYING"         # aboard a helicopter
     REPAIRING = "REPAIRING"   # at the base, busy rebuilding a bridge
+
+
+# Soldiers that can receive a new order (walk, motorcycle or helicopter)
+MOVABLE = (SoldierStatus.AT_BASE, SoldierStatus.STATIONED, SoldierStatus.DEPLOYED)
 
 
 @dataclass

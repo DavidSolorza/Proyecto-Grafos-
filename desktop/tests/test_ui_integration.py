@@ -94,8 +94,9 @@ def test_defeat_when_nothing_is_bought(ready):
 
 def test_victory_by_resistance_with_a_time_limit(tmp_path):
     raw = json.loads((DOCS / "escenario_puentes.json").read_text(encoding="utf-8"))
-    raw["metadata"]["time_limit"] = 30
-    path = tmp_path / "limite30.json"
+    for corridor in raw["graph_m"]["edges"]:
+        corridor["speed_allowed"] = 0.001                     # the convoy cannot arrive in time
+    path = tmp_path / "convoy_lento.json"
     path.write_text(json.dumps(raw), encoding="utf-8")
     d = Driver()
     assert d.store.load_file(path)
@@ -103,7 +104,7 @@ def test_victory_by_resistance_with_a_time_limit(tmp_path):
     d.go("simulacion")
     d.click("5x")
     d.play_to_end()
-    assert d.store.sim["status"] == "VICTORY_RESISTANCE" and d.store.sim["clock"] == 30.0
+    assert d.store.sim["status"] == "VICTORY_RESISTANCE" and d.store.sim["clock"] == 300.0
 
 
 def test_helicopter_with_surplus_distribution_from_the_interface(ready):

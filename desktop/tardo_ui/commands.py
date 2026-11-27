@@ -1,7 +1,7 @@
 """Commands of a running match: buy, choose soldiers, order transport, consult routes, advance the clock."""
 
 FINISHED = ("VICTORY_ELIMINATION", "VICTORY_RESISTANCE", "DEFEAT")
-FREE = ("AT_BASE", "STATIONED")        # soldiers that can receive orders
+FREE = ("AT_BASE", "STATIONED", "DEPLOYED")   # soldiers that can receive orders
 
 
 class MatchCommands:

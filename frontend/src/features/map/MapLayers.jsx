@@ -15,14 +15,6 @@ export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCo
         const isCovered = showCoverage && covered.includes(c.id);
         const m = midpoint(a, b);
         const stroke = simCorridors ? heatColor(danger / maxDanger) : isCovered ? '#16a34a' : '#d97706';
-        // Compute normal vector to offset label perpendicularly away from overlapping edges
-        const dx = b[0] - a[0];
-        const dy = b[1] - a[1];
-        const len = Math.hypot(dx, dy) || 1;
-        const nx = -dy / len;
-        const ny = dx / len;
-        const labelX = m[0] + nx * view.u * 3.2;
-        const labelY = m[1] + ny * view.u * 3.2;
 
         return (
           <g key={c.id}>
@@ -38,13 +30,6 @@ export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCo
               strokeWidth={view.u * (isCovered ? 1.6 : 1.1)} strokeDasharray={`${view.u * 2} ${view.u * 1.5}`}
               strokeLinecap="round" opacity={0.95} />
             {isCovered && <circle cx={m[0]} cy={m[1]} r={view.u * 1.1} fill="#16a34a" stroke="#ffffff" strokeWidth={view.u * 0.4} />}
-            <g transform={`translate(${labelX}, ${labelY})`}>
-              <rect x={-view.u * 3.2} y={-view.u * 1.2} width={view.u * 6.4} height={view.u * 2.4} rx={view.u * 0.5}
-                fill="rgba(241, 245, 249, 0.85)" stroke="#cbd5e1" strokeWidth={view.u * 0.2} />
-              <text x={0} y={view.u * 0.5} fontSize={view.u * 1.9} textAnchor="middle" fill="#475569" fontWeight="600">
-                {c.id}
-              </text>
-            </g>
           </g>
         );
       })}
@@ -52,7 +37,7 @@ export function CorridorLayer({ graphM, view, simCorridors, covered = [], showCo
   );
 }
 
-/** Elevated walkways and bridges of GE with parallel rails, elevation shadow and health badges. */
+/** Elevated walkways and bridges of GE with parallel rails and elevation shadow (health is a label). */
 export function EdgeLayer({ graphE, view, treeIds = [], showTree, bridges }) {
   const verts = byId(graphE.vertices);
   const live = byId(bridges);
@@ -62,11 +47,10 @@ export function EdgeLayer({ graphE, view, treeIds = [], showTree, bridges }) {
         const a = verts[e.u].coords;
         const b = verts[e.v].coords;
         const br = live[e.id];
-        const isBridge = !!br || e.is_bridge;
+        const isBridge = !!br || e.bridge_max_hp != null;
         const inTree = showTree && treeIds.includes(e.id);
         const hurt = br && br.hp < br.max_hp;
         const stroke = br?.destroyed ? '#ef4444' : inTree ? '#2563eb' : hurt ? '#eab308' : isBridge ? '#0284c7' : '#64748b';
-        const m = midpoint(a, b);
         const dx = b[0] - a[0];
         const dy = b[1] - a[1];
         const len = Math.hypot(dx, dy) || 1;
@@ -94,18 +78,6 @@ export function EdgeLayer({ graphE, view, treeIds = [], showTree, bridges }) {
               strokeWidth={view.u * (inTree ? 2.2 : isBridge ? 1.6 : 1.2)} strokeLinecap="round"
               strokeDasharray={br?.destroyed ? `${view.u * 1.2} ${view.u * 1.2}` : undefined}
               opacity={showTree && !inTree ? 0.35 : 1} />
-            {/* Bridge health badge */}
-            {br && (
-              <g transform={`translate(${m[0]}, ${m[1] - view.u * 2.0})`}>
-                <rect x={-view.u * 3.6} y={-view.u * 1.5} width={view.u * 7.2} height={view.u * 2.5} rx={view.u * 0.6}
-                  fill={br.destroyed ? '#fef2f2' : hurt ? '#fefce8' : '#f0f9ff'}
-                  stroke={br.destroyed ? '#ef4444' : hurt ? '#ca8a04' : '#0284c7'} strokeWidth={view.u * 0.3} />
-                <text x={0} y={view.u * 0.2} className="map-label" fontSize={view.u * 1.8} textAnchor="middle"
-                  fill={br.destroyed ? '#dc2626' : hurt ? '#854d0e' : '#0369a1'} fontWeight="700">
-                  {br.destroyed ? (br.waiting_crew ? '✕ sin cuadrilla' : `✕ ${br.repair_left}s`) : `${br.hp}/${br.max_hp}`}
-                </text>
-              </g>
-            )}
           </g>
         );
       })}

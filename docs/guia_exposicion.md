@@ -82,13 +82,13 @@ Solo se relacionan por distancia (alcance de disparo). Tres piezas lo hacen func
 ## 7. Simplificaciones declaradas
 
 - La cuadrilla de reconstrucción sale de los soldados que estén **en la base** (no de las torres) y no viaja hasta el
-  puente: la obra solo ocupa tiempo y personas. Con `bridge_repair_crew = 0` (valor por defecto) no necesita gente.
+  puente: la obra solo ocupa tiempo y personas (`bridge_repair_crew`, al menos 1).
 - Un tiempo `null` en `time_walk` o `time_moto` significa que ese medio no puede usar la arista. El árbol de Kruskal
   es "a pie": las posiciones que solo se alcanzan por aristas solo-moto quedan fuera del árbol y no pueden ser torres.
 - La sincronización entre Pygame y React es por sondeo cada 1.5 s (no hay *push*).
 - `max_uses` del helicóptero es el total de vuelos permitidos; no se modelan varios aparatos.
-- Un soldado solo se detiene en la base o en una torre (no en vértices de tránsito); si se queda sin ruta, queda
-  "detenido" donde esté y reanuda al cambiar la conectividad.
+- Un soldado puede ir a cualquier posición, pero solo ataca desde una torre; si se queda sin ruta, queda
+  "detenido" en un vértice y reanuda al cambiar la conectividad.
 - La ruta del convoy usa la velocidad permitida de cada corredor y la longitud `length` del JSON (no la distancia
   euclidiana de las coordenadas).
 - El estado vive en memoria de un solo usuario: reiniciar el servidor borra el plan y la partida.
