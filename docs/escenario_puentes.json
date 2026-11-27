@@ -6,7 +6,7 @@
     "beta": 0.2,
     "max_towers_K": 3,
     "initial_budget": 2000,
-    "bridge_repair_time": 30.0
+    "bridge_repair_time": 30.0, "bridge_repair_crew": 1
   },
   "graph_e": {
     "vertices": [
@@ -173,6 +173,7 @@
     "trucks": 1,
     "robot_soldiers": 2
   },
+  "helicopter": { "speed": 15.0, "cost": 200, "max_uses": 3 },
   "defenders_config": {
     "infantry": {
       "cost": 100,

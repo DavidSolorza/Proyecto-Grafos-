@@ -117,6 +117,12 @@ class Driver:
         return pygame.transform.threshold(None, area, color, (1, 1, 1, 255), None, 0, None, True)
 
 
+@pytest.fixture(autouse=True)
+def no_native_dialog(monkeypatch):
+    """Tests drive our own file chooser: a real operating system dialog would block them."""
+    monkeypatch.setattr("tardo_ui.filepicker.choose_native", lambda start=None: (False, None))
+
+
 @pytest.fixture
 def ui():
     return Driver()

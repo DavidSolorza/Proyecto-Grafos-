@@ -17,7 +17,7 @@ sesiones de trabajo. Los campos marcados con **[completar]** solo pueden llenarl
 | Modo de uso | Asistente con acceso al repositorio: leyó el enunciado y el código, escribió y editó archivos, ejecutó pruebas y manejó el navegador integrado para probar la interfaz. |
 | Punto de partida | La base del proyecto (commit `f66deda`, "initial project base with decoupled Flask backend and React frontend") y los documentos de propuesta y reglas de `docs/` ya existían antes de estas sesiones. |
 | Integrantes | Juan Sebastián Naranjo Verdugo y David Josué Solorza Viera (reparto en [`distribucion_tareas.md`](distribucion_tareas.md)). **[completar: qué revisó y ejecutó cada uno]** |
-| Fechas de trabajo | **[completar]** |
+| Fechas de trabajo | Según el historial de Git: del 9 al 27 de noviembre de 2026. |
 
 ## 2. Qué hizo la IA
 
@@ -28,7 +28,7 @@ sesiones de trabajo. Los campos marcados con **[completar]** solo pueden llenarl
 | Diseño visual | Rehízo los estilos web con una escala fluida basada en `clamp()` (tipografía, espacios, radios, rejillas, áreas táctiles), pulió ambas interfaces y añadió escala fluida a la ventana Pygame. |
 | Frontend (React) | Rediseñó la interfaz web (paleta beige y negro, diseño responsive): vistas de inicio, grafos, plan y simulación, mapa SVG, paneles y bitácora. Añadió la sincronización con el cliente Pygame. |
 | Cliente Pygame | Construyó la interfaz de escritorio que pide el enunciado (§13): cliente de la API, widgets, mapa 2D, cuatro pantallas, selector de archivos y arranque que inicia Flask. Añadió el endpoint `/scenario/status` para sincronizar clientes. |
-| Pruebas | Escribió las 232 pruebas del backend y las 91 del cliente Pygame, y el comando `verificar.py`. Hizo pruebas de mutación y recorridos de la interfaz. |
+| Pruebas | Escribió las pruebas del backend y del cliente Pygame, y el comando `verificar.py`. Hizo pruebas de mutación y recorridos de la interfaz. |
 | Documentación | Redactó la guía de ejecución y verificación, la guía de pruebas, la guía de exposición, el manual de usuario, el manual técnico, la distribución de tareas y este reporte. |
 
 ## 3. Qué decidieron las personas
@@ -51,7 +51,7 @@ Reparto interno del trabajo y revisión del código por cada integrante: **[comp
 
 El código generado por una IA puede ser incorrecto aunque parezca razonable, así que no se aceptó sin comprobarlo:
 
-1. **Pruebas automáticas (232 del backend y 91 de Pygame).** Una por sección del enunciado. Los algoritmos se comparan contra implementaciones
+1. **Pruebas automáticas (284 del backend y 122 de Pygame).** Una por sección del enunciado. Los algoritmos se comparan contra implementaciones
    independientes: Kruskal contra fuerza bruta (todos los conjuntos de V−1 aristas), Dijkstra contra la búsqueda de todas
    las rutas simples y contra Bellman-Ford en grafos aleatorios, el montículo contra `sorted`.
 2. **Pruebas de mutación manuales.** Se rompieron a propósito reglas del código (orden de fin de partida, desgaste al caminar,
@@ -60,7 +60,7 @@ El código generado por una IA puede ser incorrecto aunque parezca razonable, as
 3. **Recorrido en la interfaz real.** Se cargaron escenarios válidos e inválidos, se compró, se movió, se hicieron colapsar
    puentes y se llegó a cada resultado final, comparando con valores calculados aparte (por ejemplo derrota a 23.0 s y
    victoria por eliminación a 14.25 s con $1750 en el escenario simple).
-4. **Cliente Pygame sin ventana real.** Las 91 pruebas dibujan en una superficie en memoria (controlador de vídeo `dummy` de SDL), simulan
+4. **Cliente Pygame sin ventana real.** Las pruebas dibujan en una superficie en memoria (controlador de vídeo `dummy` de SDL), simulan
    clics, teclas y rueda del ratón, pulsan los botones por su nombre, comprueban píxeles y juegan partidas completas contra un
    servidor Flask real por HTTP. Además se revisaron capturas de cada pantalla. Se rompieron a propósito 19 reglas del código
    del cliente y las 19 fueron detectadas.
@@ -98,6 +98,27 @@ Declarar los errores es parte del uso responsable de la herramienta:
 | En el rediseño, las negritas del héroe oscuro salían en tinta oscura y no se leían; los botones pequeños medían 30 px en móvil; el resplandor del mapa Pygame era una "media luna" dura | Revisión de capturas y medición en el navegador | Color propio para el héroe, mínimos táctiles de 44 px y resplandor en capas suaves. |
 | Mi comprobación de "web fluida" nunca detectaba nada: un `\b` mal escapado dejó un carácter de control en la expresión regular | Mutación (añadir un `font-size: 14px` a propósito) | Corregida; ahora la mutación se detecta. |
 | Un servidor de pruebas antiguo seguía escuchando el mismo puerto y devolvía datos viejos | Datos inconsistentes entre clientes | Se verificó en otros puertos y se hizo configurable el puerto de Vite (`VITE_PORT`, `VITE_BACKEND_URL`); la guía advierte de este caso. |
+
+### Sesión del 27 de noviembre de 2026: revisión y correcciones
+
+Se usó **Claude (Claude Sonnet 5.5)** desde la aplicación de Claude, conectada a la carpeta del proyecto (rama `prueba`).
+Un integrante pidió auditar el proyecto contra el enunciado y después corregir lo encontrado. La IA:
+
+- Ejecutó las pruebas y la aplicación, y encontró fallos que las pruebas no detectaban: cierre al cancelar el selector de
+  archivos, órdenes aceptadas con la partida terminada, recálculo tardío ante un puente caído, error 500 con un JSON mal
+  formado y soldados que no se podían seleccionar en Pygame.
+- Cambió código, escenarios, pruebas y documentación para corregirlos. Decisiones que propuso y que los integrantes deben
+  revisar: destinos en cualquier posición, función del helipuerto, rechazo de archivos que cambien la tabla de soldados o
+  los 300 s, y retiro de los botones de escenarios precargados de la web.
+- El detalle está en [`informe_estado_requisitos.md`](informe_estado_requisitos.md). La verificación se hizo en una máquina
+  virtual Linux, no en Windows nativo.
+
+En la misma sesión un integrante pidió además corregir el aspecto visual con diseño responsive y `clamp()`. La IA rehízo
+la colocación de etiquetas de los dos mapas y reorganizó los paneles. Al recorrer la web en un navegador sin ventana
+(Chromium, de 320 a 1920 px) aparecieron fallos que la compilación no mostraba: etiquetas encimadas y de 6 px en celular,
+bitácora casi ilegible, contador de enemigos descuadrado por un choque de nombres CSS, puentes sin distinguir antes del
+combate y leyenda con colores distintos a los del mapa. En Pygame, el selector de archivos dejaba la ventana en negro y
+había textos cortados. Todo se corrigió; falta que los integrantes lo recorran en Windows y en un celular real.
 
 ## 6. Limitaciones y riesgos que se declaran
 

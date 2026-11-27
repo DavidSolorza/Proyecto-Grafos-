@@ -49,7 +49,7 @@ cd backend
 python -m pytest tests -v
 ```
 
-Resultado esperado: **232 passed**. (Si `pytest` no está instalado: `python -m pip install -r requirements-dev.txt`.) Cada archivo cubre una sección del PDF:
+Resultado esperado: **284 passed**. (Si `pytest` no está instalado: `python -m pip install -r requirements-dev.txt`.) Cada archivo cubre una sección del PDF:
 
 | Archivo | Sección | Qué comprueba |
 |---|---|---|
@@ -79,7 +79,7 @@ cd desktop
 python -m pytest tests -q
 ```
 
-Resultado esperado: **91 passed** (unos 17 s). No abren una ventana real: usan el controlador de vídeo `dummy` de SDL,
+Resultado esperado: **122 passed** (unos 30 s). No abren una ventana real: usan el controlador de vídeo `dummy` de SDL,
 simulan clics, teclas y rueda del ratón, pulsan los botones **por su nombre** y comprueban píxeles del mapa.
 
 | Archivo | Qué comprueba |
@@ -176,7 +176,7 @@ Con soldados comprados (escenario simple):
    **"A pie va 1 soldado; en moto pueden ir 1 o 2"** y *nada cambia*.
 2. Selecciona `S1`, Destino `V_C1`, Medio **A pie** → **Ver ruta**:
    `V_BASE → V_T1 → V_C1 (20s)`. Con **Moto**: `(8s)`.
-3. Prueba destino que no es torre (no aparece en la lista: solo torres y base) y una torre llena: llena `V_C1`
+3. Envía un soldado a `V_T1` (no es torre): llega y queda *en punto*, sin atacar. Prueba una torre llena: llena `V_C1`
    con 3 soldados y manda un cuarto → error "no tiene capacidad libre (ocupantes + reservas)".
 4. Envía a `S1` a pie y pulsa **+1 s** 20 veces: en el instante 20 el chip pasa a `en torre V_C1`. Con moto, en 8.
 5. Mientras un soldado está "en camino" sus ataques no cuentan (ver 2.6).
@@ -222,7 +222,7 @@ bitácora muestra **varios golpes seguidos en el mismo instante** (daño de áre
 
 Sube `escenario_puentes.json`, calcula el plan, ve a Simulación y:
 
-1. Compra **3 Infanterías**.
+1. Compra **4 Infanterías** (`S4` se queda en la base: es la persona que reconstruye el puente).
 2. `S1`: Destino `V_C1`, **A pie**, **Enviar**. Luego `S2` y `S3`: Destino `V_C1`, **Moto**, **Enviar**.
 3. Velocidad **5×** y **Iniciar**. Mira las etiquetas de los puentes en el mapa:
 
@@ -268,7 +268,7 @@ Sube `escenario_cuadrilla.json` (en **Inicio** el resumen dice *Personas por rep
 
 1. Compra 4 Infanterías. Selecciona `S1..S4`, Destino `V_C1`, Medio **Helicóptero** → **Enviar**.
 2. Esperado inmediatamente: Presupuesto **$1400 disponible, $200 reservado** (compra $400 + vuelo $200 reservado);
-   los chips dicen **volando**; en el mapa aparece el icono ✚; la insignia dice `helicópteros: 2 · $200`.
+   los chips dicen **volando**; en el mapa aparece el icono ✚; la insignia dice `vuelos: 2 · $200`.
 3. Pulsa **+1 s** unas 3 veces. Bitácora esperada:
 
 ```
@@ -283,7 +283,7 @@ Sube `escenario_cuadrilla.json` (en **Inicio** el resumen dice *Personas por rep
 6. Retorno a base: compra 7 Infanterías y haz tres vuelos: `S1–S4` → `V_C1`; luego `S5, S6` → `V_C2`
    (quedan ambas torres en 3/3); por último `S7` → `V_C1`. Esperado en la bitácora:
    `H3 aterrizó en V_C1: bajan 0, quedan 1 a bordo`, `H3 lleva 1 excedente(s) hacia V_BASE` y `S7` queda **en base**.
-   Los 3 vuelos gastan los 3 usos ($600): disponible final **$700**, reservado **$0** (la vuelta a la base no cobra
+   Los 3 vuelos gastan los 3 usos ($600): disponible final **$700** más las recompensas que ya se hayan cobrado, reservado **$0** (la vuelta a la base no cobra
    un vuelo extra).
 
 ### 2.10 Fin de la partida (§11)
@@ -292,7 +292,7 @@ Sube `escenario_cuadrilla.json` (en **Inicio** el resumen dice *Personas por rep
 |---|---|---|
 | **Derrota** | No compres nada, **Iniciar**. | A los **23.0 s**, "Derrota: una máquina viva llegó a la salida". |
 | **Victoria por eliminación** | 2 Francotiradores → `V_C1` en moto, **Iniciar**. | A los **14.25 s**, ganas; presupuesto final **$1750** (2000 − 600 + 350). |
-| **Victoria por resistencia** | Sube `escenario_puentes.json` con `"time_limit": 30` en `metadata` y no compres nada. | A los **30.0 s** ("Se resistió 30 s"). |
+| **Victoria por resistencia** | Sube `escenario_puentes.json` con `"speed_allowed": 0.001` en todos los corredores y no compres nada. | A los **300.0 s** ("Se resistió 300s"). |
 
 Tras el final: el reloj se detiene, aparece el cartel con **Jugar de nuevo** y **Ver mapa** (para mirar el estado
 final). **Reiniciar** vuelve a empezar con puentes reparados.
@@ -309,8 +309,10 @@ Con solo 3 Infanterías (2 en moto a `V_C1`, 1 a pie a `V_C2`; daño 10 y alcanc
 ### 2.12 Interfaz responsive (§13)
 
 1. En el navegador abre las herramientas (F12) → modo dispositivo → ancho **375 px**.
-2. Esperado: sin barra de desplazamiento horizontal, las pestañas se deslizan, los paneles pasan debajo del mapa y
-   los controles quedan antes de la bitácora.
+2. Esperado: la página no se desplaza hacia los lados; las cuatro pestañas caben en una fila; solo el mapa se desliza
+   horizontalmente (lo avisa un texto debajo); los paneles pasan debajo del mapa y los controles quedan antes de la bitácora.
+3. Vuelve a un ancho de escritorio: la bitácora y el convoy quedan lado a lado debajo del mapa y los controles.
+4. En Pygame, arrastra el borde de la ventana: el diseño se reacomoda y ningún texto queda cortado ni encimado.
 
 ---
 
@@ -332,7 +334,11 @@ un mensaje rojo y el escenario activo no debe cambiar.
 | `"D0": 0` | `metadata.D0 debe ser mayor que 0` |
 | `"max_towers_K": 0` | `max_towers_K debe ser un entero positivo` |
 | `"time_walk": null` **y** `"time_moto": null` en la misma arista | `debe permitir al menos un medio` |
-| `"bridge_repair_crew": -1` en `metadata` | `bridge_repair_crew debe ser un entero >= 0` |
+| `"bridge_repair_crew": 0` en `metadata` | `bridge_repair_crew debe ser un entero positivo` |
+| `"time_limit": 450` en `metadata` | `time_limit debe ser 300 segundos` |
+| `"damage": 60` en `defenders_config.sniper` | `debe ser 50 (tabla del enunciado)` |
+| Borrar la sección `helicopter` | `helicopter: es obligatorio` |
+| Un número dentro de la lista `vertices` | `todos los elementos deben ser objetos` |
 | Convoy con todo en 0 | `convoy: debe tener al menos una máquina` |
 | Borrar el último corredor de GM | `No hay camino entre la ENTRADA y la SALIDA del laberinto` |
 
@@ -386,7 +392,7 @@ Otras reglas que puedes romper de la misma forma (cada una hace fallar al menos 
 | §10 Presupuesto disponible/reservado, sin saldo negativo | `test_s9_air_budget.py` | 2.4, 2.9 |
 | §11 Reloj, prioridades, condiciones de fin | `test_s11_end.py` | 2.10 |
 | §12 JSON elegido desde la interfaz | `test_s12_api.py` | 2.1 |
-| §13 Interfaz Pygame: mapa, cargar y validar, MST, comprar, transportar, rutas, puentes, resultado | `desktop/tests/` (91 pruebas) | 2.1 a 2.12 |
+| §13 Interfaz Pygame: mapa, cargar y validar, MST, comprar, transportar, rutas, puentes, resultado | `desktop/tests/` (122 pruebas) | 2.1 a 2.12 |
 
 ## 6. Límites que debes conocer
 

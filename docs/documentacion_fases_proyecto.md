@@ -1,7 +1,7 @@
 # DOCUMENTACIÓN TÉCNICA Y OPERATIVA POR FASES
 ## "La Derrota del Dictador General P. Tardo"
 **Universidad de Caldas — Facultad de Inteligencia Artificial e Ingenierías**  
-**Estructuras de Datos — Proyecto 2 (100% Conformidad con la Guía Oficial)**
+**Estructuras de Datos — Proyecto 2 (estado por requisito: informe_estado_requisitos.md)**
 
 ---
 
@@ -53,7 +53,7 @@ Ambos grafos comparten el mismo sistema cartesiano bidimensional $(x, y)$, pero 
   - `BASE`: Exactamente una base de mando por escenario ($z=0$). Punto de compra y spawn de tropas.
   - `CANDIDATE`: Ubicaciones candidatas a convertirse en torres de vigilancia.
   - `TRANSIT`: Puntos de paso intermedios para caminos o puentes.
-  - `HELIPORT`: Helipuertos para operaciones aéreas.
+  - `HELIPORT`: Puntos de aterrizaje y recogida del helicóptero, sin límite de cupo.
 - **Aristas:** No dirigidas, con tiempos positivos `time_walk` y `time_moto` (o `null` si el medio no se permite).
   - Los puentes cuentan con resistencia entera positiva `bridge_max_hp` y `bridge_current_hp`.
 
@@ -142,6 +142,7 @@ Donde $\alpha \ge 0$ convierte el daño estimado en penalización equivalente de
 ### 6.1 Desplazamiento Terrestre
 - **A pie:** 1 soldado por orden. No desgasta puentes.
 - **En motocicleta:** 1 o 2 soldados juntos por moto. Velocidad más rápida según `time_moto`.
+- **Destino:** cualquier posición de $G_E$; solo desde una torre se ataca.
 
 ### 6.2 Desgaste y Reconstrucción de Puentes
 - Cada motocicleta que termina de cruzar un puente reduce su resistencia actual en 1 unidad:
@@ -149,8 +150,8 @@ $$\text{HP}_{\text{actual}} \leftarrow \text{HP}_{\text{actual}} - 1$$
 - Al llegar a $\text{HP}=0$, el puente colapsa:
   - Queda inhabilitado inmediatamente para nuevos cruces.
   - Los cruces ya iniciados pueden finalizar su tránsito.
-  - Se activa la **cuadrilla de reconstrucción**, restaurando el puente tras un tiempo configurable `bridge_repair_time`.
-  - Soldados en tránsito que queden cortados recalculan ruta desde el siguiente nodo seguro o se detienen temporalmente hasta su reparación.
+  - Se activa la **cuadrilla de reconstrucción** (N $\ge 1$ soldados de la base), restaurando el puente tras un tiempo configurable `bridge_repair_time`.
+  - Soldados con un puente caído en su ruta restante recalculan en el siguiente vértice o se detienen hasta que haya ruta.
 
 ---
 
@@ -164,7 +165,7 @@ $$t_{\text{vuelo}} = \frac{\text{distancia}(u, v)}{v_{\text{heli}}}$$
 
 ### 7.2 Algoritmo de Distribución de Excedentes
 Al arribar a la torre destino:
-1. Desembarca soldados hasta agotar la capacidad libre (considerando reservas previas).
+1. Desembarca soldados hasta agotar la capacidad libre en ese momento (considerando las otras reservas).
 2. Si quedan soldados excedentes a bordo:
    - Se buscan sucesivamente otras torres habilitadas en orden de **menor distancia euclidiana** desde la posición actual del helicóptero.
    - En caso de empate en distancia, se desempatan por orden lexicográfico.
@@ -185,11 +186,11 @@ Al arribar a la torre destino:
 - En coincidencias temporales se aplica el siguiente orden de resolución estricto:
   1. Resolución de ataques balísticos de tropas sobre máquinas.
   2. Verificación de presencia de máquinas vivas en la salida (`M_SALIDA`).
-  3. Límite de tiempo lógico (`time_limit`).
+  3. Límite de tiempo lógico (300 s).
 
 ### 8.3 Condiciones de Finalización
 1. **Victoria por Eliminación:** Todas las unidades enemigas del convoy son destruidas.
-2. **Victoria por Resistencia:** Se alcanzan los 300 s (o el tiempo límite configurado) sin que ninguna máquina viva llegue a la salida.
+2. **Victoria por Resistencia:** Se alcanzan los 300 s sin que ninguna máquina viva llegue a la salida.
 3. **Derrota:** Al menos una máquina viva del convoy alcanza `M_SALIDA`.
 
 ---
@@ -198,7 +199,7 @@ Al arribar a la torre destino:
 
 ### 9.1 Cliente Pygame (`desktop/main.py`)
 - **100% Vectorial procedural:** Implementado exclusivamente con `pygame.draw`, `pygame.Surface` y `pygame.font`. Cero imágenes PNG/SVG.
-- **Selector nativo:** Integra `tkinter.filedialog.askopenfilename` para seleccionar dinámicamente cualquier JSON sin rutas fijas.
+- **Selector de archivos:** `tkinter.filedialog.askopenfilename`, con un selector propio si no está disponible; sin rutas fijas.
 - **Diseño en 3 Zonas:**
   - **Barra Superior (Top Bar):** Control de reloj, velocidad, presupuesto, estado de conexión y botones de capas ($T_E$, $R_v$, Audio).
   - **Lienzo Central (72% de pantalla):** Renderizado de ambos grafos con márgenes amplios (padding), puentes con rieles paralelos y 3 ranuras circulares indicadoras de tropas en las torres.
@@ -218,16 +219,16 @@ Diseñada específicamente en la rama `prueba` para evaluar los 10 puntos críti
 1. `test_profesor_01`: Ausencia absoluta de librerías externas de grafos.
 2. `test_profesor_02`: Independencia topológica entre $G_E$ y $G_M$.
 3. `test_profesor_03`: Kruskal con tiempos a pie y fórmula voraz $S(p)$.
-4. `test_profesor_04`: Fórmula balística $R_{\text{ef}}$ y prioridades de daño (menor HP y AOE).
+4. `test_profesor_04`: Fórmula balística $R_{\text{ef}}$.
 5. `test_profesor_05`: Cálculo dinámico de peligro $w(e)$ y re-enrutamiento reactivo.
 6. `test_profesor_06`: Desgaste exclusivo por motocicletas y reconstrucción de puentes.
 7. `test_profesor_07`: Capacidad de 4 soldados en helicóptero y distribución de excedentes.
-8. `test_profesor_08`: Integridad presupuestal y recompensas únicas.
+8. `test_profesor_08`: Integridad presupuestal.
 9. `test_profesor_09`: Reloj lógico de 0.25 s y resolución de condiciones de fin.
-10. `test_profesor_10`: Arranque vacío y validación de esquemas JSON.
+10. `test_profesor_10`: Validación del esquema JSON.
 
 ### 10.2 Resultados de la Auditoría Integral
-- **Backend:** 232 pruebas pasando (100%).
+- **Backend:** 284 pruebas pasando.
 - **Auditoría de Enunciado:** 47 de 47 puntos verificados contra servidor HTTP real.
-- **Suite Pygame:** 91 pruebas pasando (100%).
+- **Suite Pygame:** 122 pruebas pasando.
 - **Límite de Gobernanza:** Todos los archivos de código fuente cumplen el límite estricto de **menos de 150 líneas**.

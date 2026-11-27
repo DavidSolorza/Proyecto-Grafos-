@@ -9,17 +9,23 @@ const STATUS = {
   WAITING: 'detenido',
   FLYING: 'volando',
   REPAIRING: 'reconstruyendo',
+  DEPLOYED: 'en punto',
 };
-const FREE = ['AT_BASE', 'STATIONED'];
+const MODE_NAMES = { walk: 'a pie', moto: 'en moto' };
+const TYPES = { INFANTRY: 'Infantería', SNIPER: 'Francotirador', GUNNER: 'Artillero' };
+const FREE = ['AT_BASE', 'STATIONED', 'DEPLOYED'];
 
 /** Choose soldiers, a destination and a transport (walk, motorcycle or helicopter). */
-export default function TransportPanel({ sim, baseId, ctrl }) {
+export default function TransportPanel({ sim, baseId, vertices, ctrl }) {
   const [picked, setPicked] = useState([]);
   const [dest, setDest] = useState('');
   const [mode, setMode] = useState('walk');
   const [route, setRoute] = useState(null);
 
-  const destinations = [...sim.towers.map((t) => t.vertex_id), baseId];
+  // every GE position is a valid destination; towers and the base come first
+  const first = [...sim.towers.map((t) => t.vertex_id), baseId];
+  const destinations = [...first, ...vertices.map((v) => v.id).filter((id) => !first.includes(id)).sort()];
+  const finished = ['VICTORY_ELIMINATION', 'VICTORY_RESISTANCE', 'DEFEAT'].includes(sim.status);
   const toggle = (id) => {
     setRoute(null);
     setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
@@ -59,13 +65,13 @@ export default function TransportPanel({ sim, baseId, ctrl }) {
                 disabled={!FREE.includes(s.status)}
                 onChange={() => toggle(s.id)}
               />
-              <b>{s.id}</b> {s.type.slice(0, 3)} · {STATUS[s.status]}
-              {FREE.includes(s.status) ? ` ${s.vertex}` : ''}
+              <b>{s.id} · {TYPES[s.type] ?? s.type}</b>
+              <small>{STATUS[s.status]}{FREE.includes(s.status) ? ` ${s.vertex}` : ''}</small>
             </label>
           ))}
         </div>
       )}
-      <div className="row">
+      <div className="transport-fields">
         <select value={dest} onChange={(e) => { setDest(e.target.value); setRoute(null); }} aria-label="Destino">
           <option value="">Destino…</option>
           {destinations.map((d) => (
@@ -82,7 +88,7 @@ export default function TransportPanel({ sim, baseId, ctrl }) {
         <button
           className="btn small"
           onClick={send}
-          disabled={!picked.length || !dest}
+          disabled={finished || !picked.length || !dest}
           style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
           <Send size={14} /> Enviar
@@ -99,7 +105,7 @@ export default function TransportPanel({ sim, baseId, ctrl }) {
       {route && <p className="mono route-line">{route}</p>}
       {sim.transfers.map((t) => (
         <p key={t.id} className="mono fine">
-          {t.id}: {t.soldiers.join(', ')} → {t.dest} ({t.status === 'WAITING' ? 'detenido por puente' : t.mode})
+          {t.id}: {t.soldiers.join(', ')} → {t.dest} ({t.status === 'WAITING' ? 'detenido por puente' : MODE_NAMES[t.mode] ?? t.mode})
         </p>
       ))}
     </div>

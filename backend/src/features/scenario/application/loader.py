@@ -6,6 +6,7 @@ from src.core.errors.handlers import AppError
 from src.features.labyrinth.application.route_finder import minimum_route
 from src.features.scenario.domain.scenario import ScenarioMetadata
 from src.features.scenario.domain.scenario_manager import ScenarioManager
+from src.features.scenario.application.statement_rules import TIME_LIMIT
 from src.features.scenario.application.validator import validate_scenario
 
 
@@ -43,8 +44,8 @@ class ScenarioLoader:
             max_towers_k=int(meta.get("max_towers_K", 3)),
             initial_budget=int(meta.get("initial_budget", 2000)),
             bridge_repair_time=float(meta.get("bridge_repair_time", 30.0)),
-            time_limit=float(meta.get("time_limit", 300.0)),
-            bridge_repair_crew=int(meta.get("bridge_repair_crew", 0)),
+            time_limit=float(meta.get("time_limit", TIME_LIMIT)),
+            bridge_repair_crew=int(meta.get("bridge_repair_crew", 1)),
         )
 
         manager = ScenarioManager(metadata)
@@ -64,9 +65,6 @@ class ScenarioLoader:
         manager.candidates_meta = raw.get("candidates_meta", [])
         manager.convoy_config = raw.get("convoy", {})
         manager.defenders_config = raw.get("defenders_config", {})
-        manager.helicopter_config = {
-            "speed": 15.0, "cost": 200, "max_uses": 3,
-            **raw.get("helicopter", {}),
-        }
+        manager.helicopter_config = dict(raw["helicopter"])
 
         return manager

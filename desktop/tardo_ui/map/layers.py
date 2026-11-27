@@ -2,6 +2,7 @@
 import pygame
 
 from tardo_ui import theme as t
+from tardo_ui.map.labels import along, around
 
 
 def dashed(surface, color, a, b, width=2, dash=9, gap=6) -> None:
@@ -17,7 +18,7 @@ def dashed(surface, color, a, b, width=2, dash=9, gap=6) -> None:
         pos += dash + gap
 
 
-def draw_corridors(ui, vp, scenario, sim, covered=(), route=()) -> None:
+def draw_corridors(ui, vp, scenario, sim, labels, covered=(), route=()) -> None:
     verts = {v["id"]: v for v in scenario["graph_m"]["vertices"]}
     live = {c["id"]: c for c in (sim or {}).get("corridors", [])}
     top = max([1.0] + [c["danger"] for c in live.values()])
@@ -27,10 +28,11 @@ def draw_corridors(ui, vp, scenario, sim, covered=(), route=()) -> None:
         if c["id"] in route:                         # cheapest entry -> exit route (section 3): a wide band under the corridor
             pygame.draw.line(ui.surface, t.OCHRE, a, b, 9)
         dashed(ui.surface, color, a, b, 3 if c["id"] in covered else 2)
-        mid = ((a[0] + b[0]) // 2, (a[1] + b[1]) // 2)
         if c["id"] in covered:
+            mid = ((a[0] + b[0]) // 2, (a[1] + b[1]) // 2)
             pygame.draw.circle(ui.surface, t.LEAF, mid, 5)
-        ui.text(c["id"], (mid[0], mid[1] - 12), "map", t.MAP_DIM, "midbottom")
+            labels.reserve(mid, 10, 10)
+        labels.text(6, c["id"], t.MAP_DIM, along(a, b), optional=True)
 
 
 def bridge_label(br: dict) -> tuple[str, tuple]:
@@ -39,7 +41,7 @@ def bridge_label(br: dict) -> tuple[str, tuple]:
     return f"{br['hp']}/{br['max_hp']}", t.MAP_TEXT
 
 
-def draw_roads(ui, vp, scenario, sim, tree_ids=()) -> None:
+def draw_roads(ui, vp, scenario, sim, labels, tree_ids=()) -> None:
     verts = {v["id"]: v for v in scenario["graph_e"]["vertices"]}
     live = {b["id"]: b for b in (sim or {}).get("bridges", [])}
     for e in scenario["graph_e"]["edges"]:
@@ -55,10 +57,26 @@ def draw_roads(ui, vp, scenario, sim, tree_ids=()) -> None:
             pygame.draw.line(ui.surface, color, a, b, 4 if in_tree else 2)
         if br:
             label, tone = bridge_label(br)
-            ui.text(label, ((a[0] + b[0]) // 2, (a[1] + b[1]) // 2 - 8), "map", tone, "midbottom")
+            labels.text(2, label, tone, along(a, b), border=t.HOT if br["destroyed"] else None)
 
 
-def draw_vertices_e(ui, vp, scenario, sim, tower_ids, selected) -> None:
+def tower_pill(ui, labels, pos, tower) -> None:
+    """Occupancy of a tower: "used/capacity" plus one dot per slot (solid = inside, gold = reserved)."""
+    used, cap = tower["occupants"] + tower["reserved"], tower["capacity"]
+    text = f"{used}/{cap}"
+    text_w = ui.fonts.get("bold").size(text)[0]
+
+    def paint(rect):
+        labels.backdrop(rect, t.OCHRE)
+        ui.text(text, (rect.x + 6, rect.centery), "bold", t.GOLD, "midleft")
+        for i in range(cap):
+            fill = t.LEAF if i < tower["occupants"] else t.GOLD if i < used else (80, 72, 60)
+            pygame.draw.circle(ui.surface, fill, (rect.x + text_w + 14 + i * 10, rect.centery), 4)
+
+    labels.add(0, (text_w + cap * 10 + 14, 20), around(*pos, 15, "above"), paint)
+
+
+def draw_vertices_e(ui, vp, scenario, sim, labels, tower_ids, selected) -> None:
     occupancy = {tw["vertex_id"]: tw for tw in (sim or {}).get("towers", [])}
     for v in scenario["graph_e"]["vertices"]:
         x, y = vp.to_screen(v["coords"])
@@ -81,19 +99,14 @@ def draw_vertices_e(ui, vp, scenario, sim, tower_ids, selected) -> None:
             ui.text("H", (x, y), "bold", t.INK, "center")
         else:
             pygame.draw.circle(ui.surface, (168, 156, 132), (x, y), 5)
-        ui.text(v["id"], (x, y + 14), "map", t.MAP_TEXT, "midtop")
+        size = 12 if kind == "TRANSIT" else 22
+        labels.reserve((x, y), size, size)
+        labels.text(1, v["id"], t.MAP_TEXT, around(x, y, size // 2 + 2, "below"))
         if tower and v["id"] in occupancy:
-            tw = occupancy[v["id"]]
-            ui.text(f"{tw['occupants'] + tw['reserved']}/{tw['capacity']}", (x, y - 15), "bold", t.GOLD, "midbottom")
-            # 3 slot indicators below the tower label
-            for s_idx in range(tw.get("capacity", 3)):
-                sx = x - 12 + s_idx * 12
-                c_fill = t.LEAF if s_idx < tw["occupants"] else t.GOLD if s_idx < (tw["occupants"] + tw["reserved"]) else (80, 72, 60)
-                pygame.draw.circle(ui.surface, c_fill, (sx, y + 30), 4)
-                pygame.draw.circle(ui.surface, t.INK, (sx, y + 30), 4, 1)
+            tower_pill(ui, labels, (x, y), occupancy[v["id"]])
 
 
-def draw_vertices_m(ui, vp, scenario, selected) -> None:
+def draw_vertices_m(ui, vp, scenario, labels, selected) -> None:
     for v in scenario["graph_m"]["vertices"]:
         x, y = vp.to_screen(v["coords"])
         color = t.LEAF if v["is_entry"] else t.HOT if v["is_exit"] else t.RUST
@@ -101,10 +114,7 @@ def draw_vertices_m(ui, vp, scenario, selected) -> None:
             pygame.draw.circle(ui.surface, t.PAPER, (x, y), 16, 2)
         pygame.draw.polygon(ui.surface, color, [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)])
         pygame.draw.polygon(ui.surface, t.INK, [(x, y - 8), (x + 8, y), (x, y + 8), (x - 8, y)], 1)
-        tag = "ENTRADA " if v["is_entry"] else "SALIDA " if v["is_exit"] else ""
-        label = f"{tag}{v['id']}"
-        lw, lh = ui.fonts.get("map").size(label)
-        bg_rect = pygame.Rect(x - lw // 2 - 4, y - 24, lw + 8, lh + 2)
-        pygame.draw.rect(ui.surface, (20, 17, 14), bg_rect, border_radius=4)
-        pygame.draw.rect(ui.surface, color, bg_rect, 1, border_radius=4)
-        ui.text(label, (x, y - 12), "map", color, "midbottom")
+        labels.reserve((x, y), 18, 18)
+        tag = "ENTRADA" if v["is_entry"] else "SALIDA" if v["is_exit"] else ""
+        label = f"{tag} {v['id']}" if tag and tag not in v["id"].upper() else v["id"]
+        labels.text(1 if tag else 4, label, color, around(x, y, 11, "above"), border=color if tag else None)

@@ -23,6 +23,7 @@ class Store(MatchCommands):
         self.speed, self.running, self.hide_end = 1, False, False
         self.picked, self.dest, self.mode, self.route_text = [], "", "walk", ""
         self.log_scroll, self.bottom_tab = 0, "bitacora"      # purely visual state of the simulation screen
+        self.pages: dict = {}                    # current page of every long list
         self.now = self._last_tick = self._last_sync = 0
         self._sig = None
 

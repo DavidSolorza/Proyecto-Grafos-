@@ -2,17 +2,20 @@
 import pygame
 
 from tardo_ui import theme as t
-from tardo_ui.map.canvas import draw_legend, draw_map
+from tardo_ui.paging import paged
+from tardo_ui.map.canvas import draw_legend, draw_map, legend_height
 from tardo_ui.screens.common import node_info, page_head, stat_grid
 
 
 def draw(ui, rect, store, app) -> None:
     plan = store.plan
     page_head(ui, rect, "Fase 1 · Planificación", "Plan de defensa", "")
-    side_w = 430
-    mp = pygame.Rect(rect.x, rect.y + 54, rect.w - side_w - 16, rect.h - 54 - 54)
+    side_w = t.fluid(430, rect.w * 0.30, 520)
+    keys = ["base", "candidate", "tower", "tree", "corridor"]
+    mp = pygame.Rect(rect.x, rect.y + 54, rect.w - side_w - 16, 0)
+    mp.h = rect.bottom - mp.y - legend_height(ui, keys, mp.w) - 8
     draw_map(ui, mp, store, tree=store.show_tree, radii=store.show_radii, layers="both")
-    draw_legend(ui, (mp.x, mp.bottom + 8), ["base", "candidate", "tower", "tree", "corridor"], mp.w)
+    draw_legend(ui, (mp.x, mp.bottom + 8), keys, mp.w)
     x = rect.right - side_w
     if ui.button((x, rect.y + 6, 180, 34), "Recalcular plan" if plan else "Calcular plan", key="Calcular plan", tone="on"):
         store.calculate_plan()
@@ -22,7 +25,7 @@ def draw(ui, rect, store, app) -> None:
     if ui.button((x + 306, rect.y + 6, 124, 34), "Radios Rv", key="Radios", tone="ghost",
                  active=store.show_radii and bool(plan), enabled=bool(plan)):
         store.show_radii = not store.show_radii
-    inner = ui.card(pygame.Rect(x, mp.y, side_w, mp.h), "Resultado")
+    inner = ui.card(pygame.Rect(x, mp.y, side_w, rect.bottom - mp.y), "Resultado")
     if not plan:
         ui.wrap("Pulsa «Calcular plan» para ver el árbol, las torres y la cobertura.", inner, "body", t.SOFT)
         return
@@ -34,7 +37,7 @@ def draw(ui, rect, store, app) -> None:
     if plan["unreachable"]:
         y = ui.wrap("Fuera de la componente de la base (no pueden ser torres): " + ", ".join(plan["unreachable"]),
                     (inner.x, y + 4, inner.w, 40), "small", t.TERRA)
-    y = steps(ui, inner, plan, y + 6)
+    y = steps(ui, inner, store, y + 6)
     node_info(ui, pygame.Rect(inner.x, max(y + 4, inner.bottom - 44), inner.w, 40), store)
 
 
@@ -59,17 +62,21 @@ def watched(ui, inner, store, y) -> int:
     return ui.wrap(", ".join(plan["covered_corridors"]) or "ninguno", (inner.x, y + 16, inner.w, 40), "small", t.SOFT)
 
 
-def steps(ui, inner, plan, y) -> int:
+def steps(ui, inner, store, y) -> int:
+    """Every iteration of the greedy selection; long explanations are split into pages."""
     ui.text("Paso a paso de la selección voraz", (inner.x, y), "bold")
-    y += 22
-    for st in plan["steps"]:
-        ui.text(f"Iteración {st['iteration']}: gana {st['chosen']}  ·  vigila ahora: {', '.join(st['new_corridors']) or 'nada nuevo'}",
-                (inner.x, y), "small", t.OCHRE, max_w=inner.w)
-        y += 16
+    lines = []
+    for st in store.plan["steps"]:
+        head = (f"Iteración {st['iteration']}: gana {st['chosen']}  ·  vigila ahora: "
+                f"{', '.join(st['new_corridors']) or 'nada nuevo'}")
+        parts = [head] if ui.fonts.get("small").size(head)[0] <= inner.w else ui.lines(head, "small", inner.w)
+        lines += [(part, 0, "small", t.OCHRE) for part in parts]
         for s in st["scores"]:
             win = s["vertex_id"] == st["chosen"]
-            ui.text(f"{'> ' if win else '  '}{s['vertex_id']}: C = {s['gain']:g}, D_T = {s['dt']:g}s, S = {s['score']:.2f}",
-                    (inner.x + 8, y), "mono", t.INK if win else t.SOFT, max_w=inner.w - 8)
-            y += 16
-        y += 4
-    return y
+            lines.append((f"{'> ' if win else '  '}{s['vertex_id']}: C = {s['gain']:g}, D_T = {s['dt']:g}s, "
+                          f"S = {s['score']:.2f}", 8, "mono", t.INK if win else t.SOFT))
+    area = pygame.Rect(inner.x, y + 22, inner.w, max(16, inner.bottom - 48 - (y + 22)))
+    for text, indent, kind, color in paged(ui, store, "pasos", lines, area.h // 16, area, (inner.right, y)):
+        ui.text(text, (inner.x + indent, y + 22), kind, color, max_w=inner.w - indent)
+        y += 16
+    return y + 22

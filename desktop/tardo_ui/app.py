@@ -23,8 +23,10 @@ class App:
     so the layout fills any window and everything grows and shrinks smoothly, like CSS clamp().
     """
 
-    def __init__(self, store: Store, surface: pygame.Surface = None, size=(1360, 820)) -> None:
+    def __init__(self, store: Store, surface: pygame.Surface = None, size=None) -> None:
         self.store = store
+        if surface is None:
+            size = size or t.window_size(*pygame.display.get_desktop_sizes()[0])
         self.window = surface or pygame.display.set_mode(size, pygame.RESIZABLE)
         self.canvas, self.scale = self.window, 1.0
         self.ui = Ui(self.window)
@@ -39,10 +41,11 @@ class App:
 
     def open_picker(self) -> None:
         from tardo_ui.filepicker import choose_native
-        chosen = choose_native(self.last_dir)
-        if chosen:
-            self.last_dir = chosen.parent
-            self.store.load_file(chosen)
+        available, chosen = choose_native(self.last_dir)
+        if available:                                           # cancelling simply closes the dialog
+            if chosen:
+                self.last_dir = chosen.parent
+                self.store.load_file(chosen)
             return
         self.picker = FilePicker(self.last_dir)
         self.ui.click = None                                    # this click opened the dialog: it must not also pick a row
@@ -99,7 +102,7 @@ class App:
 
     def no_scenario(self, area: pygame.Rect) -> None:
         ui = self.ui
-        inner = ui.card(pygame.Rect(area.x, area.y, 560, 170), "Aún no hay un escenario cargado")
+        inner = ui.card(pygame.Rect(area.centerx - 280, area.y + area.h // 5, 560, 170), "Aún no hay un escenario cargado")
         ui.wrap("La aplicación arranca vacía: tú eliges el archivo JSON que describe los grafos, el convoy y el presupuesto.",
                 inner, "body", t.SOFT)
         if ui.button((inner.x, inner.y + 62, 280, 36), "Ir a cargar un escenario", key="ir a inicio", tone="on"):

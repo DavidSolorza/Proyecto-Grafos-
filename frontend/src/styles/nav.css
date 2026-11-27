@@ -39,7 +39,10 @@
 @media (max-width: 40rem) {
   .brand { flex-wrap: nowrap; }
   .brand small { display: none; }
-  .tabs { margin-top: var(--sp-2); }
+  .tabs { margin-top: var(--sp-2); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow: visible; }
+  .tab { justify-content: center; text-align: center; white-space: normal; line-height: 1.15; padding: var(--sp-1) 2px;
+    font-size: var(--fs-2xs); min-height: var(--tap); }
+  .tab svg, .tab span { display: none; }
 }
 @media (max-width: 30rem) {
   .pill-text { display: none; }

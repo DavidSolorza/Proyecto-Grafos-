@@ -38,7 +38,7 @@ export default function GraphsView({ scenario }) {
           </div>
           <GraphMap graphE={scenario.graph_e} graphM={scenario.graph_m} layers={layers}
             routeIds={scenario.initial_route?.corridors} selected={selected} onSelect={setSelected} />
-          <MapLegend items={['base', 'candidate', 'heliport', 'edge', 'corridor']} />
+          <MapLegend items={['base', 'candidate', 'heliport', 'edge', 'bridge', 'corridor']} />
         </div>
 
         <div className="stack">

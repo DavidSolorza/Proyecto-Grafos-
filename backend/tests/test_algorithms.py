@@ -93,7 +93,7 @@ def test_motorcycles_wear_and_collapse_bridge_then_repair():
     slow_convoy(manager)
     edge = manager.graph_e.edges["E_E1"]
     edge.bridge_current_hp = 1
-    sim.recruit("infantry", 1)
+    sim.recruit("infantry", 2)                       # S2 stays at the base to rebuild the bridge
     sim.ground.request(["S1"], "V_C1", "moto")
     run(sim, 6)  # E_E1 takes 5s by motorcycle
     assert edge.is_destroyed
@@ -104,7 +104,7 @@ def test_motorcycles_wear_and_collapse_bridge_then_repair():
 def test_blocked_soldier_waits_and_resumes():
     sim, manager = new_match()
     slow_convoy(manager)
-    sim.recruit("infantry", 1)
+    sim.recruit("infantry", 2)                       # S2 stays at the base to rebuild the bridge
     sim.ground.request(["S1"], "V_C1", "walk")
     run(sim, 1)
     manager.graph_e.edges["E_E2"].is_destroyed = True  # collapse right in front of it

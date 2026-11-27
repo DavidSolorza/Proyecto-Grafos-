@@ -1,11 +1,14 @@
 /* Light tactical battlefield canvas */
-.stage { position: relative; border-radius: var(--radius); padding: clamp(6px, 1vw, 12px); overflow: hidden;
+.stage { position: relative; border-radius: var(--radius); padding: clamp(6px, 1vw, 12px); overflow: hidden; min-width: 0;
   background: radial-gradient(circle at 50% 10%, rgba(59, 130, 246, 0.05), transparent 70%), #f8fafc;
   border: 1px solid #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05); }
-.stage svg { display: block; width: 100%; height: auto; max-height: min(72vh, 46rem); }
 
-.map-label { fill: #1e293b; font-family: var(--font-mono); pointer-events: none; }
-.map-label.dim { fill: #64748b; font-weight: 500; }
+/* The map is drawn in real pixels: when the box is narrower than the map, it scrolls sideways */
+.map-scroll { overflow-x: auto; overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; }
+.map-svg { display: block; margin-inline: auto; }
+.map-hint { text-align: center; font-size: var(--fs-2xs); padding-top: var(--sp-1); }
+
+.map-label { font-family: var(--font-mono); pointer-events: none; }
 .map-node { cursor: pointer; outline: none; transition: transform 0.15s ease; }
 .map-node:hover { filter: brightness(1.15) drop-shadow(0 2px 6px rgba(37, 99, 235, 0.35)); }
 
@@ -14,20 +17,23 @@
 
 .legend { display: flex; flex-wrap: wrap; gap: var(--sp-1) var(--sp-4); padding: var(--sp-3) var(--sp-1) 0; font-size: var(--fs-xs); color: #475569; }
 .legend span { display: inline-flex; align-items: center; }
-.legend i { display: inline-block; width: 0.85em; aspect-ratio: 1; margin-right: 0.5em; border-radius: 2px; }
+.legend i { display: inline-block; width: 0.85em; aspect-ratio: 1; margin-right: 0.5em; border-radius: 3px;
+  border: 1px solid rgba(15, 23, 42, 0.28); }
 
-/* Minimalist Translucent Top HUD Bar */
-.map-hud-bar { position: absolute; top: 8px; left: 8px; right: 8px; display: flex; justify-content: space-between;
-  align-items: center; pointer-events: none; z-index: 10; gap: 8px; }
-.hud-group { display: flex; align-items: center; gap: 6px; background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(8px); border: 1px solid rgba(203, 213, 225, 0.9); border-radius: 9999px; padding: 3px 8px; pointer-events: auto; }
-.hud-tag { display: flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 700; color: #1e293b; }
+/* HUD row above the map, so it never covers a vertex */
+.map-hud-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: var(--sp-2);
+  padding-bottom: var(--sp-2); }
+.hud-group { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); background: #ffffff;
+  border: 1px solid rgba(203, 213, 225, 0.9); border-radius: 9999px; padding: 3px var(--sp-2); margin-right: auto; }
+.hud-group:empty { display: none; }
+.hud-group:last-child { margin-right: 0; margin-left: auto; }
+.hud-tag { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-family: var(--font-mono); font-weight: 700; color: #1e293b; }
 .hud-tag.cash { color: #15803d; }
 .hud-tag.time { color: #2563eb; }
 .hud-tag.enemy { color: #dc2626; }
 .hud-tag.win { color: #16a34a; }
-.hud-btn-mini { display: inline-flex; align-items: center; gap: 3px; background: transparent; border: 1px solid transparent;
-  cursor: pointer; padding: 2px 7px; border-radius: 9999px; font-size: var(--fs-xs); font-weight: 600; color: #64748b; }
+.hud-btn-mini { display: inline-flex; align-items: center; justify-content: center; gap: 3px; background: transparent; border: 1px solid transparent;
+  cursor: pointer; padding: 2px var(--sp-2); border-radius: 9999px; font-size: var(--fs-xs); font-weight: 600; color: #64748b; }
 .hud-btn-mini:hover { background: #f1f5f9; color: #1e293b; }
 .hud-btn-mini.on { background: #2563eb; color: #ffffff; border-color: #1d4ed8; }
 

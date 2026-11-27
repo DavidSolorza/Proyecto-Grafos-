@@ -1,17 +1,8 @@
 import React, { useState } from 'react';
 import { uploadScenarioFile } from '../api/client';
-import { UploadCloud, FileCheck, AlertCircle, Sparkles } from 'lucide-react';
+import { UploadCloud, FileCheck, AlertCircle } from 'lucide-react';
 
-const SAMPLES = [
-  { id: 'escenario_gran_ciudadela.json', label: '⚔️ Gran Fortaleza (Épico 12 Nodos)' },
-  { id: 'escenario_general_p_tardo.json', label: 'General P. Tardo (Base)' },
-  { id: 'escenario_asedio_final.json', label: 'El Asedio Final' },
-  { id: 'escenario_complejo.json', label: 'Complejo (11 Nodos)' },
-  { id: 'escenario_puentes.json', label: 'Puentes Frágiles' },
-  { id: 'escenario_cuadrilla.json', label: 'Cuadrilla de Reparación' },
-];
-
-/** Lets the user choose, drop or 1-click load any scenario .json. */
+/** Lets the user choose or drop any scenario .json: there are no fixed input paths. */
 export default function FileUploader({ onUploaded }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -28,21 +19,6 @@ export default function FileUploader({ onUploaded }) {
     } catch (err) {
       setMsg({ type: 'error', text: err.message });
     } finally {
-      setBusy(false);
-    }
-  };
-
-  const loadSample = async (filename) => {
-    setBusy(true);
-    setMsg(null);
-    try {
-      const res = await fetch(`/scenarios/${filename}`);
-      if (!res.ok) throw new Error(`No se pudo cargar /scenarios/${filename}`);
-      const blob = await res.blob();
-      const file = new File([blob], filename, { type: 'application/json' });
-      await processFile(file);
-    } catch (err) {
-      setMsg({ type: 'error', text: err.message });
       setBusy(false);
     }
   };
@@ -74,27 +50,6 @@ export default function FileUploader({ onUploaded }) {
           {busy ? 'Validando…' : 'Subir archivo JSON'}
           <input type="file" accept=".json,application/json" onChange={(e) => processFile(e.target.files?.[0])} disabled={busy} hidden />
         </label>
-      </div>
-
-      <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-          <Sparkles size={14} color="#d97706" />
-          <b className="font-xs" style={{ color: '#475569' }}>Escenarios precargados de prueba (1 clic):</b>
-        </div>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {SAMPLES.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className="btn ghost small font-2xs"
-              onClick={() => loadSample(s.id)}
-              disabled={busy}
-              style={{ padding: '4px 10px' }}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {msg && (

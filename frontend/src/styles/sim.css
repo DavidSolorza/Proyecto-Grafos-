@@ -1,27 +1,42 @@
-/* Simulation panels: recruit buttons, soldier chips, enemy list and the event log */
+/* Simulation panels: recruit buttons, soldier chips, enemy cards and the event log */
+.stats.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .recruit { display: grid; gap: var(--sp-2); }
 .recruit-btn { display: grid; justify-items: start; text-align: left; border-radius: var(--radius-sm); padding: var(--sp-2) var(--sp-3); gap: 2px;
   min-height: var(--tap); }
 .recruit-btn b { font-size: var(--fs-sm); }
 .recruit-btn span { font-size: var(--fs-2xs); color: var(--ink-soft); font-family: var(--font-mono); font-weight: 500; }
 
-.chips { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
-.chip { display: inline-flex; align-items: center; min-height: calc(var(--tap) * 0.85); border: 1px solid var(--line-strong); border-radius: 999px;
-  padding: 0 var(--sp-3); font-size: var(--fs-xs); cursor: pointer; background: var(--paper-soft); user-select: none;
-  transition: background 0.15s, color 0.15s, transform 0.15s var(--ease); }
-.chip:hover { border-color: var(--ochre); transform: translateY(-1px); }
+.chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(7.8rem, 11vw, 9.5rem), 1fr)); gap: var(--sp-2);
+  max-height: clamp(180px, 34vh, 320px); overflow-y: auto; padding: 2px; }
+.chip { display: flex; flex-direction: column; justify-content: center; min-height: var(--tap); border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm); padding: var(--sp-1) var(--sp-2); font-size: var(--fs-xs); line-height: 1.3; cursor: pointer;
+  background: var(--paper-soft); user-select: none; transition: background 0.15s, color 0.15s; }
+.chip small { font-size: var(--fs-2xs); opacity: 0.78; }
+.chip:hover { border-color: var(--ochre); }
 .chip.sel { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.chip:has(input:disabled) { opacity: 0.45; cursor: not-allowed; transform: none; }
+.chip:has(input:focus-visible) { outline: 3px solid var(--ochre); }
+.chip:has(input:disabled) { opacity: 0.5; cursor: not-allowed; }
 
+.transport-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(10rem, 14vw, 13rem)), 1fr)); gap: var(--sp-2); }
+.transport-fields select { width: 100%; }
 .route-line { font-size: var(--fs-xs); overflow-wrap: anywhere; }
-.enemy { font-size: var(--fs-sm); display: grid; gap: var(--sp-1); }
-.enemy.dead { opacity: 0.4; text-decoration: line-through; }
 
-.log { list-style: none; max-height: clamp(200px, 32vh, 360px); overflow-y: auto; display: grid; gap: var(--sp-2);
+/* Controls, then the log and the convoy side by side under the map when there is room */
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, clamp(320px, 34vw, 520px)), 1fr));
+  gap: var(--sp-4); align-items: start; margin-top: var(--sp-4); }
+.foes { display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(8.2rem, 10vw, 10rem), 1fr)); gap: var(--sp-2); }
+.foe { display: grid; align-content: start; gap: var(--sp-1); padding: var(--sp-2); border: 1px solid var(--line);
+  border-radius: var(--radius-sm); background: var(--paper-soft); font-size: var(--fs-xs); line-height: 1.35; min-width: 0; }
+.foe b { overflow-wrap: anywhere; }
+.foe .mono { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-2xs); }
+.foe.dead { opacity: 0.45; }
+.foe.dead b { text-decoration: line-through; }
+
+.log-card { max-height: clamp(280px, 56vh, 520px); }
+.log { list-style: none; min-height: 0; overflow-y: auto; display: grid; align-content: start; gap: var(--sp-2);
   font-size: var(--fs-xs); padding-right: var(--sp-1); scrollbar-width: thin; scrollbar-color: var(--ink-soft) transparent; }
-.log li { display: grid; grid-template-columns: clamp(42px, 4vw, 56px) 1.2em 1fr; gap: var(--sp-2); color: var(--sand); line-height: 1.45; }
-.log .mono { color: rgba(216, 200, 166, 0.6); }
-.log-combat { color: #f0b8a4 !important; }
-.log-bridge { color: #e8c37a !important; }
-.log-end { color: var(--paper) !important; font-weight: 600; }
-.log-system { opacity: 0.75; }
+.log li { display: grid; grid-template-columns: clamp(42px, 4vw, 56px) 1.4em 1fr; gap: var(--sp-2); color: var(--ink-3); line-height: 1.45; }
+.log-combat { color: #9a3412 !important; }
+.log-bridge { color: #854d0e !important; }
+.log-end { color: var(--ink) !important; font-weight: 700; }
+.log-system { opacity: 0.8; }

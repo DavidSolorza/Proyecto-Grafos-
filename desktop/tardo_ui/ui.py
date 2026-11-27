@@ -16,7 +16,7 @@ class Ui:
     def __init__(self, surface: pygame.Surface) -> None:
         self.surface, self.fonts = surface, t.Fonts()
         self.mouse, self.click, self.wheel, self.hits, self.lock = (0, 0), None, 0, {}, False
-        self.viewport = None                       # last map viewport drawn
+        self.viewport, self.labels = None, None    # last map viewport and label layout drawn
         self.scale, self.time_ms = 1.0, 0          # window scale (see App) and the application clock, for animations
         self._cache: dict = {}
 
@@ -65,19 +65,24 @@ class Ui:
         self.surface.blit(img, rect)
         return rect
 
-    def wrap(self, txt, rect, kind="body", color=t.SOFT, gap=2) -> int:
-        """Word-wrapped paragraph inside rect; returns the y below the last line."""
-        font, y, line = self.fonts.get(kind), rect[1], ""
+    def lines(self, txt, kind: str, width: int) -> list:
+        """Split a paragraph into the lines that fit the width."""
+        font, out, line = self.fonts.get(kind), [], ""
         for word in str(txt).split():
             trial = f"{line} {word}".strip()
-            if font.size(trial)[0] > rect[2] and line:
-                self.surface.blit(self._render(line, kind, color), (rect[0], y))
-                y, line = y + font.get_linesize() + gap, word
+            if font.size(trial)[0] > width and line:
+                out.append(line)
+                line = word
             else:
                 line = trial
-        if line:
+        return out + [line] if line else out
+
+    def wrap(self, txt, rect, kind="body", color=t.SOFT, gap=2) -> int:
+        """Word-wrapped paragraph inside rect; returns the y below the last line."""
+        y, step = rect[1], self.fonts.get(kind).get_linesize() + gap
+        for line in self.lines(txt, kind, rect[2]):
             self.surface.blit(self._render(line, kind, color), (rect[0], y))
-            y += font.get_linesize() + gap
+            y += step
         return y
 
     # ---- shapes ------------------------------------------------------------------------
@@ -104,7 +109,7 @@ class Ui:
         pygame.draw.rect(self.surface, t.INK if dark else t.LINE, rect, 1, border_radius=12)
         top = 10
         if title:
-            self.text(title, (rect.x + 12, rect.y + 9), "h3", t.PAPER if dark else t.INK)
+            self.text(title, (rect.x + 12, rect.y + 9), "h3", t.PAPER if dark else t.INK, max_w=rect.w - 24)
             top = 36
         return pygame.Rect(rect.x + 12, rect.y + top, rect.w - 24, rect.h - top - 10)
 

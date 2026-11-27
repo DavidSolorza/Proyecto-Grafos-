@@ -65,21 +65,23 @@ export default function SimView({ scenario, plan, ctrl, onNavigate }) {
                 <h2>{end[1]}</h2><p>{sim.end_reason}</p>
                 <div className="row center">
                   <button className="btn on" onClick={() => { setHideEnd(false); ctrl.reset(); }}>Jugar de nuevo</button>
-                  <button className="btn ghost small light" onClick={() => setHideEnd(true)}>Ver mapa</button>
+                  <button className="btn ghost small" onClick={() => setHideEnd(true)}>Ver mapa</button>
                 </div>
               </div>
             )}
           </GraphMap>
-          <MapLegend items={['base', 'tower', 'edge', 'corridor', 'convoy', 'soldier']} />
+          <MapLegend items={['base', 'tower', 'edge', 'bridge', 'corridor', 'convoy', 'infantry', 'sniper', 'gunner']} />
           <NodeInfo node={selected} onClose={() => setSelected(null)} />
         </div>
         <div className="stack">
           <SimControls sim={sim} ctrl={ctrl} />
           <RecruitPanel sim={sim} onRecruit={ctrl.recruit} />
-          <TransportPanel sim={sim} baseId={base.id} ctrl={ctrl} />
-          <ConvoyPanel sim={sim} />
-          <EventLog events={sim.events} />
+          <TransportPanel sim={sim} baseId={base.id} vertices={scenario.graph_e.vertices} ctrl={ctrl} />
         </div>
+      </div>
+      <div className="panels">
+        <EventLog events={sim.events} />
+        <ConvoyPanel sim={sim} />
       </div>
     </div>
   );

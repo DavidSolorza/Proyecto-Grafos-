@@ -170,6 +170,7 @@
     "trucks": 1,
     "robot_soldiers": 2
   },
+  "helicopter": { "speed": 15.0, "cost": 200, "max_uses": 3 },
   "defenders_config": {
     "infantry": {
       "cost": 100,

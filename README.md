@@ -43,10 +43,10 @@ npm run dev
 Para abrir las tres piezas con un solo comando: `python desktop/main.py --web`.
 
 En la web, abre `http://localhost:5173`. La aplicación **arranca vacía**: el escenario se elige siempre desde la pantalla
-**Inicio**. Hay cuatro para probar: `docs/escenario_general_p_tardo.json` (simple) y `docs/escenario_complejo.json` (ciclos, empates, un vértice aislado y rutas alternativas).
-`docs/escenario_puentes.json` sirve para probar puentes que colapsan y `docs/escenario_cuadrilla.json` la reconstrucción que ocupa a N personas, las calles sin puente y los medios no permitidos. Se cargan desde la pantalla **Inicio**.
+**Inicio**. Hay seis para probar: `docs/escenario_general_p_tardo.json` (simple) y `docs/escenario_complejo.json` (ciclos, empates, un vértice aislado y rutas alternativas).
+`docs/escenario_puentes.json` sirve para probar puentes que colapsan y `docs/escenario_cuadrilla.json` la reconstrucción que ocupa a N personas, las calles sin puente y los medios no permitidos. También están `docs/escenario_asedio_final.json` y `docs/escenario_gran_ciudadela.json` (el más grande). Se cargan desde la pantalla **Inicio**.
 
-Pruebas (232 del backend, que no necesitan Flask ni ventana, y 91 de la interfaz Pygame, que tampoco abren una ventana real):
+Pruebas (284 del backend, que no necesitan ventana, y 122 de la interfaz Pygame, que tampoco abren una ventana real):
 
 ```bash
 cd backend
@@ -98,6 +98,7 @@ y siempre se llena. Detalles en el [manual técnico](docs/manual_tecnico.md), se
 
 ## Documentación
 
+- [`docs/informe_estado_requisitos.md`](docs/informe_estado_requisitos.md): estado de cada solicitud del enunciado.
 - [`docs/guia_ejecucion_y_verificacion.md`](docs/guia_ejecucion_y_verificacion.md): **empieza aquí**: cómo correr el
   proyecto paso a paso, verificarlo con un comando y recorrerlo a mano.
 - [`docs/informe_auditoria.md`](docs/informe_auditoria.md): informe de la auditoría punto a punto del enunciado

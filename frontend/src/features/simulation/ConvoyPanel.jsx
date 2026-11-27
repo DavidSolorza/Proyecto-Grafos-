@@ -12,17 +12,18 @@ export default function ConvoyPanel({ sim }) {
         <ShieldAlert size={16} color="#d97706" />
         <h3>Convoy Enemigo</h3>
       </div>
-      {sim.convoy.enemies.map((e) => (
-        <div key={e.id} className={`enemy ${e.alive ? '' : 'dead'}`}>
-          <div className="row spread">
-            <span><b>{e.id}</b> · {NAMES[e.type]}</span>
-            <span className="mono" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Heart size={12} color={e.alive ? '#dc2626' : '#94a3b8'} /> {e.hp}/{e.max_hp} HP
+      <div className="foes">
+        {sim.convoy.enemies.map((e) => (
+          <div key={e.id} className={`foe ${e.alive ? '' : 'dead'}`}>
+            <b>{e.id}</b>
+            <span>{NAMES[e.type]}</span>
+            <span className="mono">
+              <Heart size={12} color={e.alive ? '#dc2626' : '#94a3b8'} aria-hidden /> {e.hp}/{e.max_hp} HP
             </span>
+            <div className="bar red"><i style={{ width: `${(e.hp / e.max_hp) * 100}%` }} /></div>
           </div>
-          <div className="bar red"><i style={{ width: `${(e.hp / e.max_hp) * 100}%` }} /></div>
-        </div>
-      ))}
+        ))}
+      </div>
       {d && (
         <>
           <h3 className="mt-s" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>

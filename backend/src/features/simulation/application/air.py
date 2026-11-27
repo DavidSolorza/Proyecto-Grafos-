@@ -1,7 +1,8 @@
 """Air transport: helicopters carry up to 4 soldiers and spread the surplus."""
 from math import dist as euclid
 from src.core.errors.handlers import AppError
-from src.features.simulation.domain.units import Flight, SoldierStatus
+from src.features.elevated_graph.domain.entities import PositionType
+from src.features.simulation.domain.units import MOVABLE, Flight, SoldierStatus
 from src.features.simulation.domain.world import World
 
 HELI_CAPACITY = 4
@@ -20,6 +21,7 @@ class AirTransport:
     def request(self, soldier_ids: list[str], dest: str) -> Flight:
         """Authorize a flight: helicopter, budget, soldiers present and valid positions."""
         w = self.world
+        w.ensure_open()
         if self.uses >= self.max_uses:
             raise AppError("No quedan usos de helicóptero")
         if not soldier_ids or len(soldier_ids) > HELI_CAPACITY:
@@ -28,11 +30,12 @@ class AirTransport:
             raise AppError("Soldados inválidos")
         group = [w.soldiers[sid] for sid in soldier_ids]
         origin = group[0].vertex
-        if any(s.vertex != origin or s.status not in (SoldierStatus.AT_BASE, SoldierStatus.STATIONED)
-               for s in group):
+        if any(s.vertex != origin or s.status not in MOVABLE for s in group):
             raise AppError("Los soldados deben estar presentes en el mismo punto de recogida")
-        if dest not in w.towers or dest == origin:
-            raise AppError("El destino debe ser una torre del plan distinta al origen")
+        target = w.manager.graph_e.vertices.get(dest)
+        is_pad = target is not None and target.type == PositionType.HELIPORT
+        if (dest not in w.towers and not is_pad) or dest == origin:
+            raise AppError("El destino debe ser una torre del plan o un helipuerto, distinto al origen")
         if w.budget.available < self.cost:
             raise AppError("Presupuesto insuficiente para el vuelo")
 
@@ -73,16 +76,17 @@ class AirTransport:
                 self._land(f)
 
     def _land(self, f: Flight) -> None:
-        """Drop as many soldiers as the reservation allows, then route the surplus."""
+        """Drop as many soldiers as the tower admits now, then route the surplus."""
         w = self.world
-        is_tower = f.target in w.towers
-        if is_tower:
+        room = len(f.aboard)                     # base and heliports have no capacity limit
+        if f.target in w.towers:                 # free our reservation; other reservations still count
             w.reserved[f.target] -= f.reserved
-        dropped, f.aboard = f.aboard[:f.reserved], f.aboard[f.reserved:]
+            room = max(0, min(w.free_slots(f.target), len(f.aboard)))
+        dropped, f.aboard = f.aboard[:room], f.aboard[room:]
         for sid in dropped:
             s = w.soldiers[sid]
             s.vertex, s.xy = f.target, w.coords(f.target)
-            s.status = SoldierStatus.STATIONED if is_tower else SoldierStatus.AT_BASE
+            s.status = w.arrival_status(f.target)
             s.next_attack = w.clock + 0.25
         w.log("air", f"{f.id} aterrizó en {f.target}: bajan {len(dropped)}, quedan {len(f.aboard)} a bordo.")
         if not f.aboard:

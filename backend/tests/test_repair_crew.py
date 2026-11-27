@@ -80,11 +80,12 @@ def test_two_collapsed_bridges_need_two_different_crews():
     assert not first.is_destroyed                            # the same person then rebuilt the second one
 
 
-def test_without_a_crew_requirement_nothing_changes_and_nobody_is_busy():
-    sim, _ = crew_match(crew=0)
-    edge = collapse(sim)
-    sim.tick(30)
-    assert not edge.is_destroyed and edge.occupied_by_repair_units == 0
+def test_a_repair_always_needs_people_zero_is_rejected_and_the_default_is_one():
+    with pytest.raises(AppError, match="bridge_repair_crew"):
+        crew_match(crew=0)
+    _, manager = match("escenario_cuadrilla.json",
+                       lambda raw: raw["metadata"].pop("bridge_repair_crew"))
+    assert manager.metadata.bridge_repair_crew == 1
 
 
 def test_a_restart_clears_crews_and_waiting_repairs():

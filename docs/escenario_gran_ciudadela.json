@@ -6,8 +6,8 @@
     "beta": 0.18,
     "max_towers_K": 5,
     "initial_budget": 4500,
-    "bridge_repair_time": 20.0,
-    "time_limit": 450.0
+    "bridge_repair_time": 20.0, "bridge_repair_crew": 1,
+    "time_limit": 300.0
   },
   "graph_e": {
     "vertices": [
@@ -85,9 +85,9 @@
     "robot_soldiers": 6
   },
   "defenders_config": {
-    "infantry": { "cost": 100, "damage": 12, "base_range": 6.0, "frequency": 1.0 },
-    "sniper": { "cost": 300, "damage": 60, "base_range": 22.0, "frequency": 0.5 },
-    "gunner": { "cost": 500, "damage": 120, "base_range": 16.0, "frequency": 0.25 }
+    "infantry": { "cost": 100, "damage": 10, "base_range": 5.0, "frequency": 1.0 },
+    "sniper": { "cost": 300, "damage": 50, "base_range": 20.0, "frequency": 0.5 },
+    "gunner": { "cost": 500, "damage": 100, "base_range": 15.0, "frequency": 0.2 }
   },
   "helicopter": {
     "speed": 22.0,

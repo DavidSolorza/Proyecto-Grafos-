@@ -10,8 +10,8 @@ class Settings:
 
     # No fixed scenario path: the user always picks the JSON from the UI (requirement §12)
     PORT: int = int(os.environ.get("PORT", 5000))
-    DEBUG: bool = os.environ.get("FLASK_DEBUG", "True").lower() == "true"
-    HOST: str = os.environ.get("HOST", "0.0.0.0")
+    DEBUG: bool = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
+    HOST: str = os.environ.get("HOST", "127.0.0.1")
 
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",

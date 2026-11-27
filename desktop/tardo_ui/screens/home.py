@@ -24,8 +24,9 @@ def draw(ui, rect, store, app) -> None:
         if target != "inicio" and store.scenario and ui.clicked(box):
             store.tab = target
     y += 108
-    left = pygame.Rect(rect.x, y, int(rect.w * 0.6) - 8, min(rect.bottom - y, 330))
-    right = pygame.Rect(left.right + 16, y, rect.right - left.right - 16, 230)
+    height = t.fluid(270, rect.bottom - y, 320)                       # both cards end at the same line
+    left = pygame.Rect(rect.x, y, int(rect.w * 0.6) - 8, height)
+    right = pygame.Rect(left.right + 16, y, rect.right - left.right - 16, height)
     summary(ui, left, store)
     loader(ui, right, store, app)
 
@@ -39,11 +40,10 @@ def summary(ui, box, store) -> None:
         return
     m = sc["metadata"]
     inner = ui.card(box, m["title"])
-    ui.badge((box.right - 14, box.y + 10), "escenario activo", "ok", "topright")
     y = stat_grid(ui, inner, [(f"${m['initial_budget']}", "Presupuesto"), (str(m["max_towers_k"]), "Torres máx. (K)"),
                               (f"{m['d0']}s", "Tiempo ref. D0"), (str(m["alpha"]), "Peligro alfa"),
                               (str(m["beta"]), "Altura beta"), (f"{m['bridge_repair_time']}s", "Reparar puente"),
-                              (str(m.get("bridge_repair_crew", 0)), "Personas por reparación"),
+                              (str(m.get("bridge_repair_crew", 0)), "Personas por obra"),
                               (f"{m['time_limit']:.0f}s", "Límite de tiempo")]) + 4
     c = sc["convoy"]
     y = ui.wrap(f"Convoy: {c['tanks']} tanque(s), {c['trucks']} camión(es) y {c['robot_soldiers']} soldado(s) robot. "
@@ -51,7 +51,7 @@ def summary(ui, box, store) -> None:
                 f"GM: {len(sc['graph_m']['vertices'])} vértices y {len(sc['graph_m']['corridors'])} corredores.",
                 (inner.x, y, inner.w, 50), "body", t.SOFT)
     y = ui.wrap("Camino inicial de menor costo: " + route_text(sc), (inner.x, y, inner.w, 40), "body", t.INK)
-    x = inner.x
+    x = ui.badge((inner.x, y + 4), "escenario activo", "info").right + 8
     for key, label in CHECKS:
         ok = (store.validation or {}).get(key)
         x = ui.badge((x, y + 4), ("OK  " if ok else "NO  ") + label, "ok" if ok else "bad").right + 8

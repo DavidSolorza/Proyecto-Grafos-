@@ -19,7 +19,7 @@ def _air(name="escenario_general_p_tardo.json", n=4, money=0):
 def test_helicopter_requests_are_validated_without_side_effects():
     sim = _air(n=5)
     for ids, dest in ((["S1", "S2", "S3", "S4", "S5"], "V_C1"),   # more than 4
-                      (["S9"], "V_C1"), (["S1"], "V_H1"), (["S1"], "V_BASE"), ([], "V_C1")):
+                      (["S9"], "V_C1"), (["S1"], "V_T1"), (["S1"], "V_BASE"), ([], "V_C1")):
         before = snapshot(sim)
         with pytest.raises(AppError):
             sim.air.request(ids, dest)

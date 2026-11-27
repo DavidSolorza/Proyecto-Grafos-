@@ -27,7 +27,7 @@ Documentos relacionados: [manual de usuario](manual_usuario.md), [reporte de uso
 - **Tres piezas que se complementan.** Flask es la única fuente de verdad (estado y algoritmos); Pygame es la interfaz
   gráfica pedida por el enunciado y React es un cliente web equivalente que además sirve de panel de observación. Los dos
   clientes comparten la misma sesión (ver §12).
-- **Separación exigida (§2).** Los grafos y algoritmos no importan Flask, Pygame ni React. Por eso las 232 pruebas del
+- **Separación exigida (§2).** Los grafos y algoritmos no importan Flask, Pygame ni React. Por eso las 284 pruebas del
   backend corren sin servidor ni ventana. Las interfaces son clientes que solo muestran el estado que entrega la API.
 - **Capas por funcionalidad** (`backend/src/features/`): cada carpeta tiene `domain/` (entidades puras),
   `application/` (algoritmos y casos de uso) e `infrastructure/` (rutas Flask).
@@ -151,8 +151,8 @@ construir los grafos (`validator.py`, `validator_params.py`) y devuelve todos lo
     "max_towers_K": 3,                  // entero >= 1      (defecto 3)
     "initial_budget": 2000,             // >= 0             (defecto 2000)
     "bridge_repair_time": 30.0,         // > 0              (defecto 30)   segundos de la obra
-    "bridge_repair_crew": 0,            // entero >= 0      (defecto 0)    personas que ocupa la obra
-    "time_limit": 300.0                 // > 0              (defecto 300)  victoria por resistencia
+    "bridge_repair_crew": 1,            // entero >= 1      (defecto 1)    personas (N) que ocupa la obra
+    "time_limit": 300.0                 // solo 300         (defecto 300)  victoria por resistencia
   },
   "graph_e": {
     "vertices": [
@@ -182,21 +182,22 @@ construir los grafos (`validator.py`, `validator_params.py`) y devuelve todos lo
     "sniper":   { "cost": 300, "damage": 50,  "base_range": 20.0, "frequency": 0.5 },
     "gunner":   { "cost": 500, "damage": 100, "base_range": 15.0, "frequency": 0.2 }
   },
-  "helicopter": { "speed": 15.0, "cost": 200, "max_uses": 3 }    // opcional; estos son los defectos
+  "helicopter": { "speed": 15.0, "cost": 200, "max_uses": 3 }    // obligatorio: speed > 0, cost y max_uses >= 0
 }
 ```
 
-Secciones obligatorias: `metadata`, `graph_e`, `graph_m`, `convoy`, `defenders_config`.
+Secciones obligatorias: `metadata`, `graph_e`, `graph_m`, `convoy`, `defenders_config`, `helicopter`.
 
 Validaciones que rechazan el archivo (con mensaje en español): id repetido; una cantidad distinta de una `BASE`;
 coordenada no positiva en GE; tipo inválido; arista a un vértice inexistente o a sí misma; tiempo no positivo; arista sin
 ningún medio; puente con resistencia no entera, cero o actual mayor que la máxima; GM sin exactamente una entrada y una
 salida distintas; corredor con longitud o velocidad no positiva; `D0 ≤ 0`; `K` no entero o `< 1`; convoy vacío;
 `rv` no positivo, de un vértice que no es candidato, repetido o **ausente en alguna candidata** (cada candidata debe tener su radio); soldado sin costo, daño, alcance o frecuencia positivos;
-helicóptero con velocidad 0. Además, al subirlo se comprueba que exista camino entre la entrada y la salida de GM. Si algo
+helicóptero ausente o con velocidad 0; valores de `defenders_config` distintos de la tabla del enunciado (§5); `time_limit`
+distinto de 300; `bridge_repair_crew` menor que 1; un elemento de una lista que no sea un objeto. Además, al subirlo se comprueba que exista camino entre la entrada y la salida de GM. Si algo
 falla, el escenario activo **no cambia**.
 
-Los parámetros del enunciado que son fijos están en el código: tabla de máquinas (`ENEMY_STATS`: tanque 200 HP/150,
+Los parámetros del enunciado que son fijos están en el código: tabla de soldados y límite de 300 s (`statement_rules.py`), tabla de máquinas (`ENEMY_STATS`: tanque 200 HP/150,
 camión 100 HP/100, robot 50 HP/50), capacidad de torre 3, capacidad del helicóptero 4, paso del reloj 0.25 s.
 
 ---
@@ -299,11 +300,13 @@ máquina pasa de viva a muerta, por eso es única.
 ### 6.6 Traslado terrestre (`ground.py`)
 
 Antes de aceptar una orden se verifican, sin modificar nada: medio válido, soldados existentes y disponibles, mismo
-origen, capacidad del medio (a pie 1; moto 1 o 2), destino válido (torre del plan o base), destino distinto, capacidad
-libre de la torre (ocupantes + reservas) y existencia de ruta. Solo entonces se reserva cupo y se crea el traslado.
+origen, capacidad del medio (a pie 1; moto 1 o 2), destino válido (cualquier posición de GE), destino distinto, capacidad
+libre si el destino es una torre (ocupantes + reservas) y existencia de ruta. Al llegar, solo en una torre queda
+`STATIONED` (puede atacar); en la base queda `AT_BASE` y en otra posición `DEPLOYED` (no ataca, recibe órdenes). Solo entonces se reserva cupo y se crea el traslado.
 
-Cada paso avanza el tiempo sobre la arista actual. Si un puente se destruye antes de entrar al tramo, el soldado
-recalcula desde su vértice actual; si no hay ruta queda `WAITING` y reintenta cuando `World.version` cambia.
+Cada paso avanza el tiempo sobre la arista actual. Antes de entrar a un tramo se revisa **toda la ruta restante**:
+si hay algún puente caído más adelante, el soldado recalcula desde ese vértice (el siguiente que alcanza tras el
+colapso), aunque el tramo roto no sea el inmediato; si no hay ruta queda `WAITING` y reintenta cuando `World.version` cambia.
 
 ### 6.7 Puentes y cuadrilla (`bridges.py`)
 
@@ -316,8 +319,9 @@ resistencia máxima, la cuadrilla queda libre y la conectividad cambia (`version
 ### 6.8 Helicóptero (`air.py`)
 
 Autoriza solo si hay usos disponibles, presupuesto suficiente, soldados presentes en el mismo punto y un destino que
-sea torre del plan. Reserva el dinero y el cupo del destino al despegar. La duración es
-`distancia euclidiana / velocidad`. Al aterrizar baja tantos soldados como cupo reservó; los excedentes van a la torre
+sea torre del plan o helipuerto. Reserva el dinero y el cupo del destino al despegar. La duración es
+`distancia euclidiana / velocidad`. Al aterrizar libera su reserva y baja tantos soldados como cupo libre haya en ese momento (las reservas de otros
+vuelos y traslados se respetan); los excedentes van a la torre
 más cercana (distancia euclidiana desde el helicóptero, desempate por id) con cupo libre que no haya visitado; si no
 hay, regresan a la base. Todos los tramos son **una sola operación**: un único uso y un único cobro, que pasa de
 reservado a gastado al terminar.
@@ -345,12 +349,26 @@ prioridad del enunciado: ① todas las máquinas destruidas (victoria por elimin
 | Puente o calle | Hay `bridge_max_hp` o no | Evita un campo extra y deja claro cuáles se desgastan. |
 | Quién repara (N personas) | Soldados que están en la base, sin viaje | El enunciado no define N; la base es el único lugar donde no combaten. |
 | `max_uses` del helicóptero | Total de vuelos permitidos | El enunciado habla de "helicópteros" con "número máximo de usos"; se modela un contador. |
-| Dónde se detiene un soldado | Solo en base o torres | Son las únicas posiciones donde un soldado puede permanecer según el modelo. |
+| Dónde permanece un soldado | En cualquier posición; solo ataca desde una torre | En base queda `AT_BASE`, en otra posición `DEPLOYED`. |
 | Estado del servidor | En memoria, un usuario | Alcanza para la demostración; reiniciar limpia todo. |
-| Helipuerto (`HELIPORT`) | Tipo de posición sin comportamiento propio; los vuelos salen de la base o de torres y llegan a torres | El enunciado define el aterrizaje y el reparto solo en torres. |
+| Helipuerto (`HELIPORT`) | Punto de aterrizaje sin límite de cupo y de recogida; además de las torres, es destino de vuelo | Da función propia a ese tipo de posición; los excedentes de un vuelo siguen yendo solo a torres. |
 | Eventos temporales | Contadores por entidad avanzados por el reloj de pasos de 0,25 s | Evita una cola de eventos; cuesta O(entidades) por paso y es determinista. |
-| Destino de un traslado | Una torre del plan o la base | La capacidad (ocupantes + reservas) está definida para torres. |
+| Destino de un traslado | Cualquier posición de GE | §7 habla de moverse entre posiciones; la capacidad (ocupantes + reservas) solo aplica a torres. |
+| Empate de objetivos | Orden de identificación con números como números (`-2` antes que `-10`) | Evita que el orden alfabético altere el empate. |
+| Reglas fijas en el JSON | Se rechaza un archivo que cambie la tabla de soldados o los 300 s | Son reglas obligatorias (§2, §5, §11). |
+| MST y aristas solo para motos | No participan: sin `time_walk` no hay peso | Ver el ejemplo y el costo debajo de esta tabla. |
 | Interfaz | Pygame como interfaz principal (el enunciado lo pide) + React como cliente web, ambos sobre una API Flask | Cumple §13 sin mezclar lógica con dibujo; React queda como panel web y de observación sobre la misma sesión. |
+
+---
+
+**Ejemplo: el árbol mínimo "a pie".** En `escenario_cuadrilla.json`, `V_H1` solo se alcanza por `E_E4`, que tiene
+`time_walk = null`. Kruskal usa el tiempo a pie como peso (§4), así que esa arista no tiene peso y no puede entrar al
+árbol: `T_E` tiene 3 aristas con peso total 35 s y `V_H1` aparece como fuera de la componente. No puede ser torre porque
+`D_T(B, V_H1)` no existe. Las motos sí usan esa arista al buscar rutas. Costo: filtrar y recorrer la componente es
+O(V + E); ordenar es O(E log E) y las uniones casi O(E). Lo comprueba `test_edge_rules.py`.
+
+**Costo del recálculo por puentes.** Antes de entrar a cada tramo se revisa la ruta restante, O(L) con L tramos; solo si
+hay un puente caído se ejecuta Dijkstra, O((V + E) log V).
 
 ---
 
@@ -406,7 +424,7 @@ estado 400 (datos inválidos) o 409 (operación no permitida ahora).
 
 ## 10. Pruebas y verificación
 
-- 232 pruebas automáticas en `backend/tests/` (una por sección del enunciado) y 91 en `desktop/tests/` (cliente Pygame).
+- 284 pruebas automáticas en `backend/tests/` (por sección del enunciado) y 122 en `desktop/tests/` (cliente Pygame).
   El comando `python verificar.py` ejecuta ambas y además revisa reglas del proyecto (sin librerías de grafos ni
   `heapq`, archivos de menos de 150 líneas, escenarios válidos).
 - **Verificación contra fuerza bruta:** el MST se compara con todos los conjuntos posibles de V−1 aristas; Dijkstra
@@ -466,9 +484,11 @@ El enunciado (§13) pide una interfaz gráfica en **Pygame**. El proyecto tiene 
 | `store.py`, `commands.py` | Estado de la interfaz y operaciones (cargar, planificar, comprar, enviar, ruta, reloj, sincronizar). **Sin Pygame**: se prueban solas. |
 | `ui.py`, `theme.py` | Widgets de modo inmediato (botón, tarjeta, texto, barra, insignia), paleta beige/negro, tipografías y la escala fluida `ui_scale`. |
 | `effects.py`, `header.py` | Degradados y sombras con caché; barra superior con logotipo y pestañas. |
-| `filepicker.py` | Selector de archivos dentro de la ventana (requisito §12: sin rutas fijas). |
+| `filepicker.py` | Diálogo del sistema o, si no existe, selector dentro de la ventana (§12: sin rutas fijas). |
+| `paging.py` | Paginador (rueda o botones `<` `>`) para listas que no caben: soldados, destinos, traslados, corredores y paso a paso. |
 | `map/view.py` | Transformación mundo → pantalla: un solo encuadre para GE y GM, y selección del vértice bajo el ratón. |
 | `map/layers.py`, `map/units.py`, `map/canvas.py` | Dibujo: corredores con calor de peligro, caminos y puentes, vértices, torres, radios `Rv`, soldados, convoy, helicópteros. |
+| `map/labels.py` | Coloca los textos del mapa por prioridad para que no se cubran; los opcionales se omiten si no hay sitio. |
 | `screens/` | `home.py`, `graphs.py`, `plan.py`, `sim.py` (+ `sim_controls.py`, `sim_transport.py`, `sim_convoy.py`), `common.py`. |
 | `app.py` | Ventana, pestañas, cuadro (frame) y avisos. |
 | `main.py` | Punto de entrada: `python desktop/main.py [--url URL] [--web]`. |
@@ -493,7 +513,8 @@ Cada botón se registra en `ui.hits` por nombre, lo que permite probar la interf
 
 ### 12.5 Selector de archivos y escenario (§12)
 
-Pygame no contiene ninguna ruta de escenario. El botón **Seleccionar archivo...** abre un navegador de carpetas dentro
+Pygame no contiene ninguna ruta de escenario. El botón **Seleccionar archivo...** abre el diálogo del sistema
+(`tkinter`); cancelarlo no hace nada. Si ese diálogo no está disponible, abre un navegador de carpetas dentro
 de la ventana (carpetas y archivos `.json`, atajos a *Inicio*, *Ejemplos del proyecto* y las unidades de disco). Al elegir
 un archivo, Pygame lo lee y lo envía a `POST /scenario/upload`; **es el backend quien lo valida** y devuelve el motivo si
 se rechaza. El diálogo recuerda la última carpeta usada.
@@ -532,7 +553,7 @@ pequeña por intervalo.
 
 ### 12.9 Pruebas del cliente
 
-91 pruebas en `desktop/tests/` que corren **sin ventana real** (controlador de vídeo `dummy` de SDL): se simulan clics,
+122 pruebas en `desktop/tests/` que corren **sin ventana real** (controlador de vídeo `dummy` de SDL): se simulan clics,
 teclas y rueda del ratón; se pulsan los botones por nombre; se comprueban píxeles del mapa (árbol verde, radios, puente caído en
 rojo); se juegan partidas completas (victoria a los 14.25 s, derrota a los 23.0 s, victoria por resistencia) y se prueba el
 arranque real con un servidor HTTP. Se rompieron a propósito 19 reglas del código del cliente y las 19 fueron detectadas.
@@ -562,8 +583,10 @@ que sigue al tamaño de la ventana, pero nunca baja de un mínimo legible ni sub
   (`@media (pointer: coarse)`) todos los controles miden al menos 44 px.
 - **Rejillas fluidas:** `repeat(auto-fit, minmax(min(100%, clamp(...)), 1fr))` en pasos, conceptos y fichas: el número de columnas se ajusta solo.
   La disposición mapa + panel lateral aparece desde 62 rem; por debajo, todo se apila.
-- **Mapa:** el SVG usa `viewBox`, así que sus etiquetas y figuras escalan con el contenedor; su altura máxima es `min(72vh, 46rem)`.
-  En pantallas anchas el mapa queda fijo (`position: sticky`) mientras se recorren los paneles.
+- **Mapa:** `GraphMap` mide su caja (`useBoxWidth.js`) y proyecta el mundo a píxeles (`mapGeometry.js`), con la unidad de
+  los marcadores y la letra acotadas (la misma idea de `clamp()`). `labelLayout.js` y `mapLabels.js` colocan las etiquetas sin
+  encimarse y `LabelLayer.jsx` las dibuja. Nunca mide menos de 640 px de ancho: en una caja más angosta se desliza.
+  En pantallas anchas queda fijo (`position: sticky`) mientras se usan los controles.
 - **Teléfonos:** la barra superior se compacta (sin subtítulo y con el estado reducido a un punto) para no ocupar la pantalla.
 - **Movimiento:** hay animaciones suaves de entrada y de pulso del convoy, y se desactivan con `prefers-reduced-motion`.
 - **Sin estilos en línea de tamaño:** las clases utilitarias (`.note`, `.fine`, `.mt-*`, `.start`...) reemplazan los `style={{ fontSize }}`.
@@ -585,6 +608,8 @@ rejilla de puntos y resplandor cálido, halo sobre las torres elegidas y un anil
 
 Pruebas: `desktop/tests/test_ui_fluid.py` (16 pruebas) comprueba el recorte de la escala, su crecimiento sin saltos, que cada pantalla llene la ventana
 en cinco tamaños, la conversión de clics, la reconstrucción del lienzo solo cuando cambia el tamaño y los efectos visuales.
+`test_ui_layout.py` comprueba que ningún texto se encime ni se corte en cuatro pantallas y tres tamaños, que las etiquetas
+del mapa no se pisen en los 6 escenarios y el tamaño inicial de la ventana (`window_size`).
 
 ### 13.3 Servicio de Bus de Eventos (`eventBus.js`) y Diagnóstico de Red HTTP
 
